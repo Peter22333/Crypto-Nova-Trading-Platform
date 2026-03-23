@@ -538,6 +538,42 @@
       box-shadow: 0 4px 14px rgba(26, 107, 255, .3)
     }
 
+    /* Debug banner */
+    .debug-banner {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      font-family: var(--font);
+      color: #92400e;
+      display: none;
+    }
+    .debug-banner.show { display: block; }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font);
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .field-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-family: var(--body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+      background: #fff;
+    }
+    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,107,255,.08); }
+
     @media(max-width:1024px) {
       .stats-row {
         grid-template-columns: 1fr 1fr
@@ -578,7 +614,7 @@
         <span style="font-family:var(--font);font-size:17px;font-weight:800">Crypto Nova</span>
       </div>
       <h2>Admin Access</h2>
-      <p>Enter your Supabase credentials to continue.</p>
+      <p>Enter your admin credentials to continue.</p>
       <input class="fi" type="email" id="admin-email" placeholder="Admin email address">
       <input class="fi" type="password" id="admin-pw" placeholder="Password (min 6 characters)">
       <div id="admin-err"
@@ -749,6 +785,10 @@
 
         <!-- DEPOSITS -->
         <div id="view-deposits" class="view">
+
+          <!-- Debug banner — shows what status values actually exist in DB -->
+          <div class="debug-banner" id="dep-debug-banner"></div>
+
           <!-- Manual Credit Panel -->
           <div class="card" style="margin-bottom:20px">
             <div class="card-head">
@@ -783,16 +823,21 @@
               style="display:none;margin:0 20px 16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600">
             </div>
           </div>
+
           <!-- Pending deposits queue -->
           <div class="card" style="margin-bottom:20px">
             <div class="card-head">
               <div class="card-title">⏳ Pending Deposits — Review Queue</div>
-              <span class="badge badge-pending" id="dep-pending-badge">0 pending</span>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="badge badge-pending" id="dep-pending-badge">0 pending</span>
+                <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="loadAll()">↻ Refresh</button>
+              </div>
             </div>
             <div id="deposits-pending-table">
               <div class="loading">Loading…</div>
             </div>
           </div>
+
           <!-- All deposits history -->
           <div class="card">
             <div class="card-head">
@@ -831,20 +876,37 @@
     const SUPA_URL = 'https://xqkubletgifqdutybznz.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjA5OTMsImV4cCI6MjA4ODQzNjk5M30.TkweXseKRQuA7FoT7erYdUJMuGtYWYSZ7b7l9WCPq-8';
 
+    // ============================================================
+    // 🔒 SECURITY: Only this email can access the admin dashboard.
+    //    Change this to your real admin email address.
+    // ============================================================
+    const ADMIN_EMAIL = 'Adeotipeter434@gmail.com';
+
     let ADMIN_TOKEN = null;
     let allUsers = [], allWithdrawals = [], allDeposits = [], allInvestments = [];
     let wFilter = 'pending';
 
-    function adminH() { return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }; }
+    function adminH() {
+      return {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + ADMIN_TOKEN,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      };
+    }
 
+    // ============================================================
+    // AUTH — with admin email guard
+    // ============================================================
     async function doAdminLogin() {
       const email = document.getElementById('admin-email').value.trim();
       const pw = document.getElementById('admin-pw').value;
       const err = document.getElementById('admin-err');
       const btn = document.getElementById('admin-login-btn');
-      err.style.display = 'none'; btn.disabled = true; btn.textContent = 'Signing in…';
+      err.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
 
-      // First try: standard password auth
       try {
         const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
           method: 'POST',
@@ -854,6 +916,15 @@
         const d = await r.json();
 
         if (d.access_token) {
+          // 🔒 SECURITY CHECK — block any non-admin email immediately
+          if (d.user?.email !== ADMIN_EMAIL) {
+            err.style.display = 'block';
+            err.textContent = 'Access denied. This panel is restricted to authorised administrators only.';
+            btn.disabled = false;
+            btn.textContent = 'Sign In to Admin';
+            return;
+          }
+
           ADMIN_TOKEN = d.access_token;
           document.getElementById('admin-login-screen').style.display = 'none';
           document.getElementById('admin-dashboard').style.display = 'block';
@@ -862,23 +933,22 @@
           return;
         }
 
-        // Show detailed error to help debug
         let msg = d.error_description || d.msg || d.message || d.error || 'Login failed.';
-
-        // Common fixes guidance
         if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials')) {
-          msg = 'Invalid email or password. Make sure you are using the email & password of a Supabase user account (not your Supabase dashboard login). Click "Create Admin Account" below if you have not done this yet.';
+          msg = 'Invalid email or password. Make sure you are using the admin account credentials.';
         } else if (msg.toLowerCase().includes('confirm') || msg.toLowerCase().includes('email')) {
-          msg = 'Email not confirmed. Go to Supabase → Authentication → Users, find your account and click the 3-dot menu → "Send confirmation email", then confirm it and try again.';
+          msg = 'Email not confirmed. Go to Supabase → Authentication → Users, find your account and confirm it, then try again.';
         }
-
-        err.style.display = 'block'; err.textContent = msg;
-        btn.disabled = false; btn.textContent = 'Sign In to Admin';
+        err.style.display = 'block';
+        err.textContent = msg;
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Admin';
 
       } catch (ex) {
         err.style.display = 'block';
         err.textContent = 'Network error — check your internet connection and try again.';
-        btn.disabled = false; btn.textContent = 'Sign In to Admin';
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Admin';
       }
     }
 
@@ -898,9 +968,16 @@
         const d = await r.json();
         if (d.id || d.access_token) {
           err.style.display = 'block';
-          err.style.background = '#f0fdf4'; err.style.borderColor = '#86efac'; err.style.color = '#166534';
+          err.style.background = '#f0fdf4';
+          err.style.borderColor = '#86efac';
+          err.style.color = '#166534';
+
           if (d.access_token) {
-            // Auto-login if no email confirmation needed
+            // 🔒 SECURITY CHECK — also guard the auto-login on account creation
+            if (d.user?.email !== ADMIN_EMAIL) {
+              err.textContent = '✓ Account created. Contact the system administrator to grant admin access.';
+              return;
+            }
             ADMIN_TOKEN = d.access_token;
             document.getElementById('admin-login-screen').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
@@ -916,37 +993,109 @@
       } catch (ex) { err.style.display = 'block'; err.textContent = 'Network error.'; }
     }
 
-    function adminLogout() { ADMIN_TOKEN = null; document.getElementById('admin-login-screen').style.display = 'flex'; document.getElementById('admin-dashboard').style.display = 'none'; }
+    function adminLogout() {
+      ADMIN_TOKEN = null;
+      document.getElementById('admin-login-screen').style.display = 'flex';
+      document.getElementById('admin-dashboard').style.display = 'none';
+    }
 
+    // ============================================================
+    // DB HELPERS
+    // ============================================================
     async function dbGet(table, params = '') {
       const r = await fetch(SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : ''), { headers: adminH() });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || r.statusText);
+      }
       return r.json();
     }
+
     async function dbInsert(table, body) {
-      const r = await fetch(SUPA_URL + '/rest/v1/' + table, { method: 'POST', headers: adminH(), body: JSON.stringify(body) });
+      const r = await fetch(SUPA_URL + '/rest/v1/' + table, {
+        method: 'POST',
+        headers: adminH(),
+        body: JSON.stringify(body)
+      });
       if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.statusText); }
       return r.json();
     }
 
     async function dbPatch(table, body, params) {
-      const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?' + params, { method: 'PATCH', headers: adminH(), body: JSON.stringify(body) });
+      const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?' + params, {
+        method: 'PATCH',
+        headers: adminH(),
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || r.statusText); }
       return r.json();
     }
 
+    // ============================================================
+    // LOAD ALL — fetch deposits with NO status filter so every row
+    // comes through regardless of what status value was saved.
+    // ============================================================
     async function loadAll() {
       try {
         const [users, withdrawals, deposits, investments] = await Promise.all([
           dbGet('profiles', 'select=*&order=created_at.desc'),
           dbGet('withdrawals', 'select=*&order=created_at.desc'),
+          // ✅ FIX: fetch ALL deposits with no status filter — we filter client-side
+          // so no status spelling mismatch can hide rows from the admin.
           dbGet('deposits', 'select=*&order=created_at.desc'),
           dbGet('investments', 'select=*&order=created_at.desc'),
         ]);
-        allUsers = Array.isArray(users) ? users : [];
+
+        allUsers       = Array.isArray(users)       ? users       : [];
         allWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
-        allDeposits = Array.isArray(deposits) ? deposits : [];
+        allDeposits    = Array.isArray(deposits)    ? deposits    : [];
         allInvestments = Array.isArray(investments) ? investments : [];
-        updateStats(); renderUsers(); renderWithdrawals(); renderDeposits(); renderDepositsPending(); renderInvestments(); renderOverviewWithdrawals(); renderOverviewDeposits(); populateCreditUserSelect();
-      } catch (ex) { showToast('Error loading data: ' + ex.message); }
+
+        // ✅ FIX: after loading, surface any unexpected status values in a debug banner
+        // so you can immediately see what values the user-side app is writing.
+        const statuses = [...new Set(allDeposits.map(d => d.status))];
+        const pendingStatuses = ['pending', 'processing', 'submitted', 'awaiting', 'unconfirmed', null, undefined, ''];
+        const unknownStatuses = statuses.filter(s => !['pending','confirmed','rejected','completed'].includes(s));
+
+        const banner = document.getElementById('dep-debug-banner');
+        if (unknownStatuses.length > 0) {
+          banner.className = 'debug-banner show';
+          banner.innerHTML = `
+            <strong>⚠️ Deposit status mismatch detected.</strong>
+            Your user-side app is saving deposits with these status values:
+            <strong>${statuses.map(s => '"' + (s ?? 'null') + '"').join(', ')}</strong><br>
+            The admin panel expects <strong>"pending"</strong> for the review queue.
+            Deposits with other statuses appear in the "All" tab below but not the Pending queue.
+            Fix: update your user-side deposit insert to use <code>status: 'pending'</code>.
+          `;
+        } else {
+          banner.className = 'debug-banner';
+        }
+
+        updateStats();
+        renderUsers();
+        renderWithdrawals();
+        // ✅ FIX: pass all deposits through — pending detection is broad and tolerant
+        renderDeposits();
+        renderDepositsPending();
+        renderInvestments();
+        renderOverviewWithdrawals();
+        renderOverviewDeposits();
+        populateCreditUserSelect();
+
+      } catch (ex) {
+        showToast('Error loading data: ' + ex.message);
+        console.error('loadAll error:', ex);
+      }
+    }
+
+    // ============================================================
+    // HELPERS — isPending is now tolerant of common status variants
+    // ============================================================
+    function isPending(status) {
+      if (status == null || status === '') return true; // no status = treat as pending
+      const s = String(status).toLowerCase().trim();
+      return ['pending', 'processing', 'submitted', 'awaiting', 'unconfirmed', 'new'].includes(s);
     }
 
     function fmt(n) { return '$' + (parseFloat(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -954,20 +1103,41 @@
     function avatarColor(name) { const cols = ['#1a6bff', '#0db89e', '#7c3aed', '#f59e0b', '#16a34a', '#dc2626']; let h = 0; for (let c of (name || 'AT')) h += c.charCodeAt(0); return cols[h % cols.length]; }
     function initials(name) { return (name || 'AT').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase(); }
 
+    function getUserName(uid) {
+      const u = allUsers.find(u => u.id === uid);
+      return u ? (u.full_name || u.email || uid.slice(0, 8) + '…') : uid ? uid.slice(0, 8) + '…' : '—';
+    }
+    function getUserEmail(uid) {
+      const u = allUsers.find(u => u.id === uid);
+      return u ? (u.email || '—') : '—';
+    }
+
+    // ============================================================
+    // STATS
+    // ============================================================
     function updateStats() {
       document.getElementById('st-users').textContent = allUsers.length;
       const total = allUsers.reduce((s, u) => s + (parseFloat(u.balance) || 0), 0);
       document.getElementById('st-balance').textContent = fmt(total);
-      const pending = allWithdrawals.filter(w => w.status === 'pending').length;
-      document.getElementById('st-pending').textContent = pending;
-      document.getElementById('pending-count-badge').textContent = pending + ' pending';
-      const pendingDeps = allDeposits.filter(d => d.status === 'pending').length;
+
+      const pendingW = allWithdrawals.filter(w => w.status === 'pending').length;
+      document.getElementById('st-pending').textContent = pendingW;
+      document.getElementById('pending-count-badge').textContent = pendingW + ' pending';
+
+      // ✅ FIX: use tolerant isPending() for the deposit count
+      const pendingD = allDeposits.filter(d => isPending(d.status)).length;
+      const depBadgeOv = document.getElementById('dep-pending-badge-ov');
+      if (depBadgeOv) depBadgeOv.textContent = pendingD + ' pending';
       const depBadge = document.getElementById('dep-pending-badge');
-      if (depBadge) depBadge.textContent = pendingDeps + ' pending';
+      if (depBadge) depBadge.textContent = pendingD + ' pending';
+
       const active = allInvestments.filter(i => i.status === 'active').length;
       document.getElementById('st-investments').textContent = active;
     }
 
+    // ============================================================
+    // USERS
+    // ============================================================
     function renderUsers() {
       const q = (document.getElementById('user-search')?.value || '').toLowerCase();
       const list = allUsers.filter(u => (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q));
@@ -976,18 +1146,18 @@
       list.forEach(u => {
         const col = avatarColor(u.full_name), ini = initials(u.full_name);
         h += `<tr>
-      <td><div class="user-cell"><div class="avatar" style="background:${col}">${ini}</div><span style="font-weight:600">${u.full_name || '—'}</span></div></td>
-      <td style="color:var(--muted)">${u.email || '—'}</td>
-      <td style="font-weight:700;font-family:var(--font)">${fmt(u.balance)}</td>
-      <td><span class="badge badge-active">${u.tier || 'Standard'}</span></td>
-      <td style="color:var(--muted)">${fmtDate(u.created_at)}</td>
-      <td>
-        <div class="edit-bal-wrap">
-          <input type="number" id="bal-${u.id}" value="${parseFloat(u.balance || 0).toFixed(2)}" step="0.01">
-          <button class="btn btn-primary" onclick="updateUserBalance('${u.id}')">Save</button>
-        </div>
-      </td>
-    </tr>`;
+          <td><div class="user-cell"><div class="avatar" style="background:${col}">${ini}</div><span style="font-weight:600">${u.full_name || '—'}</span></div></td>
+          <td style="color:var(--muted)">${u.email || '—'}</td>
+          <td style="font-weight:700;font-family:var(--font)">${fmt(u.balance)}</td>
+          <td><span class="badge badge-active">${u.tier || 'Standard'}</span></td>
+          <td style="color:var(--muted)">${fmtDate(u.created_at)}</td>
+          <td>
+            <div class="edit-bal-wrap">
+              <input type="number" id="bal-${u.id}" value="${parseFloat(u.balance || 0).toFixed(2)}" step="0.01">
+              <button class="btn btn-primary" onclick="updateUserBalance('${u.id}')">Save</button>
+            </div>
+          </td>
+        </tr>`;
       });
       h += '</tbody></table>';
       document.getElementById('users-table').innerHTML = h;
@@ -1008,6 +1178,9 @@
       } catch (ex) { showToast('Error: ' + ex.message); }
     }
 
+    // ============================================================
+    // WITHDRAWALS
+    // ============================================================
     function renderWithdrawals() {
       const list = wFilter === 'all' ? allWithdrawals : allWithdrawals.filter(w => w.status === wFilter);
       if (!list.length) { document.getElementById('withdrawals-table').innerHTML = '<div class="empty">No ' + wFilter + ' withdrawals</div>'; return; }
@@ -1016,22 +1189,22 @@
         const badgeClass = w.status === 'pending' ? 'badge-pending' : w.status === 'approved' ? 'badge-active' : 'badge-rejected';
         const addr = w.address ? w.address.slice(0, 14) + '…' + w.address.slice(-6) : '—';
         h += `<tr>
-      <td>
-        <div style="font-weight:700;font-size:13px">${getUserName(w.user_id)}</div>
-        <div style="font-size:11px;color:var(--muted)">${getUserEmail(w.user_id)}</div>
-      </td>
-      <td style="font-weight:700;font-family:var(--font)">${fmt(w.amount)}</td>
-      <td><span class="badge badge-active">${w.asset || '—'}</span></td>
-      <td style="font-family:monospace;font-size:12px" title="${w.address || ''}">${addr}</td>
-      <td style="color:var(--muted)">${fmtDate(w.created_at)}</td>
-      <td><span class="badge ${badgeClass}">${w.status}</span></td>
-      <td>
-        ${w.status === 'pending' ? `
-          <button class="btn btn-green" onclick="approveWithdrawal('${w.id}')">Approve</button>
-          <button class="btn btn-red" style="margin-left:6px" onclick="rejectWithdrawal('${w.id}')">Reject</button>
-        `: '<span style="color:var(--muted);font-size:12px">No action</span>'}
-      </td>
-    </tr>`;
+          <td>
+            <div style="font-weight:700;font-size:13px">${getUserName(w.user_id)}</div>
+            <div style="font-size:11px;color:var(--muted)">${getUserEmail(w.user_id)}</div>
+          </td>
+          <td style="font-weight:700;font-family:var(--font)">${fmt(w.amount)}</td>
+          <td><span class="badge badge-active">${w.asset || '—'}</span></td>
+          <td style="font-family:monospace;font-size:12px" title="${w.address || ''}">${addr}</td>
+          <td style="color:var(--muted)">${fmtDate(w.created_at)}</td>
+          <td><span class="badge ${badgeClass}">${w.status}</span></td>
+          <td>
+            ${w.status === 'pending' ? `
+              <button class="btn btn-green" onclick="approveWithdrawal('${w.id}')">Approve</button>
+              <button class="btn btn-red" style="margin-left:6px" onclick="rejectWithdrawal('${w.id}')">Reject</button>
+            ` : '<span style="color:var(--muted);font-size:12px">No action</span>'}
+          </td>
+        </tr>`;
       });
       h += '</tbody></table>';
       document.getElementById('withdrawals-table').innerHTML = h;
@@ -1044,49 +1217,29 @@
       renderWithdrawals();
     }
 
-    function renderOverviewDeposits() {
-      const pending = allDeposits.filter(d => d.status === 'pending');
-      const badge = document.getElementById('dep-pending-badge-ov');
-      if (badge) badge.textContent = pending.length + ' pending';
-      const el = document.getElementById('overview-deposits');
-      if (!el) return;
-      if (!pending.length) {
-        el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">✅ No pending deposits</div>';
-        return;
-      }
-      let h = '<table><thead><tr><th>User</th><th>Asset</th><th>Submitted</th><th>Action</th></tr></thead><tbody>';
-      pending.slice(0, 8).forEach(d => {
-        h += `<tr class="dep-row-pending">
-      <td>
-        <div style="font-weight:700">${getUserName(d.user_id)}</div>
-        <div style="font-size:11px;color:var(--muted)">${getUserEmail(d.user_id)}</div>
-      </td>
-      <td><span class="badge badge-active">${d.asset || '—'}</span></td>
-      <td style="color:var(--muted);font-size:12px">${fmtDate(d.created_at)}</td>
-      <td><button class="btn btn-primary" onclick="showTab('deposits',document.querySelector('.sb-item:nth-child(5)'))">Review →</button></td>
-    </tr>`;
-      });
-      h += '</tbody></table>';
-      el.innerHTML = h;
-    }
-
     function renderOverviewWithdrawals() {
       const list = allWithdrawals.filter(w => w.status === 'pending').slice(0, 10);
-      if (!list.length) { document.getElementById('overview-withdrawals').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>No pending withdrawals — all clear!</div>'; return; }
+      if (!list.length) {
+        document.getElementById('overview-withdrawals').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>No pending withdrawals — all clear!</div>';
+        return;
+      }
       let h = '<table><thead><tr><th>User</th><th>Amount</th><th>Asset / Network</th><th>Address</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>';
       list.forEach(w => {
         const addr = w.address ? w.address.slice(0, 14) + '…' + w.address.slice(-6) : '—';
         h += `<tr>
-      <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(w.user_id || '').slice(0, 16)}…</td>
-      <td style="font-weight:800;font-family:var(--font);color:var(--orange)">${fmt(w.amount)}</td>
-      <td><span class="badge badge-active">${w.asset || '—'}</span> <span style="font-size:11px;color:var(--muted)">${w.network || ''}</span></td>
-      <td style="font-family:monospace;font-size:12px" title="${w.address || ''}">${addr}</td>
-      <td style="color:var(--muted)">${fmtDate(w.created_at)}</td>
-      <td>
-        <button class="btn btn-green" onclick="approveWithdrawal('${w.id}')">✓ Approve</button>
-        <button class="btn btn-red" style="margin-left:6px" onclick="rejectWithdrawal('${w.id}')">✗ Reject</button>
-      </td>
-    </tr>`;
+          <td>
+            <div style="font-weight:700;font-size:13px">${getUserName(w.user_id)}</div>
+            <div style="font-size:11px;color:var(--muted)">${getUserEmail(w.user_id)}</div>
+          </td>
+          <td style="font-weight:800;font-family:var(--font);color:var(--orange)">${fmt(w.amount)}</td>
+          <td><span class="badge badge-active">${w.asset || '—'}</span> <span style="font-size:11px;color:var(--muted)">${w.network || ''}</span></td>
+          <td style="font-family:monospace;font-size:12px" title="${w.address || ''}">${addr}</td>
+          <td style="color:var(--muted)">${fmtDate(w.created_at)}</td>
+          <td>
+            <button class="btn btn-green" onclick="approveWithdrawal('${w.id}')">✓ Approve</button>
+            <button class="btn btn-red" style="margin-left:6px" onclick="rejectWithdrawal('${w.id}')">✗ Reject</button>
+          </td>
+        </tr>`;
       });
       h += '</tbody></table>';
       document.getElementById('overview-withdrawals').innerHTML = h;
@@ -1115,17 +1268,175 @@
       } catch (ex) { showToast('Error: ' + ex.message); }
     }
 
+    // ============================================================
+    // DEPOSITS — pending queue uses tolerant isPending()
+    // ============================================================
+    function renderOverviewDeposits() {
+      // ✅ FIX: use isPending() instead of strict === 'pending'
+      const pending = allDeposits.filter(d => isPending(d.status));
+      const badge = document.getElementById('dep-pending-badge-ov');
+      if (badge) badge.textContent = pending.length + ' pending';
+      const el = document.getElementById('overview-deposits');
+      if (!el) return;
+      if (!pending.length) {
+        el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">✅ No pending deposits</div>';
+        return;
+      }
+      let h = '<table><thead><tr><th>User</th><th>Asset</th><th>Status in DB</th><th>Submitted</th><th>Action</th></tr></thead><tbody>';
+      pending.slice(0, 8).forEach(d => {
+        h += `<tr>
+          <td>
+            <div style="font-weight:700">${getUserName(d.user_id)}</div>
+            <div style="font-size:11px;color:var(--muted)">${getUserEmail(d.user_id)}</div>
+          </td>
+          <td><span class="badge badge-active">${d.asset || '—'}</span></td>
+          <td><span class="badge badge-pending">${d.status ?? 'null'}</span></td>
+          <td style="color:var(--muted);font-size:12px">${fmtDate(d.created_at)}</td>
+          <td><button class="btn btn-primary" onclick="showTab('deposits',document.querySelector('.sb-item:nth-child(5)'))">Review →</button></td>
+        </tr>`;
+      });
+      h += '</tbody></table>';
+      el.innerHTML = h;
+    }
+
+    function renderDepositsPending() {
+      // ✅ FIX: use isPending() — catches 'pending', 'processing', null, etc.
+      const pending = allDeposits.filter(d => isPending(d.status));
+
+      const badge = document.getElementById('dep-pending-badge');
+      if (badge) badge.textContent = pending.length + ' pending';
+
+      const el = document.getElementById('deposits-pending-table');
+      if (!el) return;
+
+      if (!pending.length) {
+        // ✅ FIX: show a helpful message if deposits exist but none are pending
+        const total = allDeposits.length;
+        const msg = total > 0
+          ? `✅ No pending deposits. ${total} deposit(s) exist with statuses: ${[...new Set(allDeposits.map(d => '"' + (d.status ?? 'null') + '"'))].join(', ')}`
+          : '✅ No deposits found in the database yet.';
+        el.innerHTML = `<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">${msg}</div>`;
+        return;
+      }
+
+      let h = '<table><thead><tr><th>User</th><th>Asset</th><th>DB Status</th><th>Ref</th><th>Submitted</th><th>Credit Amount</th><th>Actions</th></tr></thead><tbody>';
+      pending.forEach(d => {
+        const name = getUserName(d.user_id);
+        const email = getUserEmail(d.user_id);
+        h += `<tr>
+          <td>
+            <div style="font-weight:700;font-size:13px">${name}</div>
+            <div style="font-size:11px;color:var(--muted)">${email}</div>
+          </td>
+          <td><span class="badge badge-active">${d.asset || '—'}</span></td>
+          <td><span class="badge badge-pending" title="Actual value stored in database">${d.status ?? 'null'}</span></td>
+          <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(d.ref || d.id || '').slice(0, 16)}…</td>
+          <td style="color:var(--muted);font-size:12px">${fmtDate(d.created_at)}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:var(--muted);font-weight:600;font-size:13px">$</span>
+              <input type="number" id="dep-amt-${d.id}" placeholder="Enter amount" min="0" step="0.01"
+                value="${d.amount ? parseFloat(d.amount).toFixed(2) : ''}"
+                style="width:120px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;outline:none">
+            </div>
+          </td>
+          <td style="display:flex;gap:8px;align-items:center;padding-top:12px">
+            <button class="btn btn-green" onclick="confirmPendingDeposit('${d.id}','${d.user_id}','${d.asset || 'Crypto'}')">✓ Confirm & Credit</button>
+            <button class="btn btn-red" onclick="rejectDeposit('${d.id}')">✗ Reject</button>
+          </td>
+        </tr>`;
+      });
+      h += '</tbody></table>';
+      el.innerHTML = h;
+    }
+
+    async function confirmPendingDeposit(depId, userId, asset) {
+      const amtInput = document.getElementById('dep-amt-' + depId);
+      const amount = parseFloat(amtInput?.value) || 0;
+      if (amount <= 0) { showToast('Enter the confirmed amount first'); amtInput?.focus(); return; }
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) { showToast('User not found'); return; }
+      if (!confirm('Confirm deposit of $' + amount.toFixed(2) + ' (' + asset + ') for ' + getUserName(userId) + '?')) return;
+      try {
+        const newBal = (parseFloat(user.balance) || 0) + amount;
+        await dbPatch('profiles', { balance: newBal }, 'id=eq.' + userId);
+        await dbPatch('deposits', { status: 'confirmed', credited: true, amount: amount, admin_note: 'Confirmed by admin' }, 'id=eq.' + depId);
+        await dbInsert('transactions', {
+          user_id: userId, type: 'deposit', asset: asset,
+          amount: '+$' + amount.toFixed(2), status: 'completed', ref: 'DEP_' + depId
+        });
+        user.balance = newBal;
+        const dep = allDeposits.find(d => d.id === depId);
+        if (dep) { dep.status = 'confirmed'; dep.credited = true; dep.amount = amount; }
+        updateStats(); renderDepositsPending(); renderDeposits(); renderOverviewDeposits(); populateCreditUserSelect();
+        showToast('✓ $' + amount.toFixed(2) + ' credited to ' + getUserName(userId));
+      } catch (ex) { showToast('Error: ' + ex.message); }
+    }
+
+    async function rejectDeposit(depId) {
+      const note = prompt('Reason for rejection (optional):');
+      if (note === null) return;
+      try {
+        await dbPatch('deposits', { status: 'rejected', admin_note: note || 'Rejected by admin' }, 'id=eq.' + depId);
+        const dep = allDeposits.find(d => d.id === depId);
+        if (dep) dep.status = 'rejected';
+        renderDepositsPending(); renderDeposits(); renderOverviewDeposits();
+        showToast('Deposit rejected');
+      } catch (ex) { showToast('Error: ' + ex.message); }
+    }
+
     var depFilter = 'all';
 
-    function getUserName(uid) {
-      const u = allUsers.find(u => u.id === uid);
-      return u ? (u.full_name || u.email || uid.slice(0, 8) + '…') : uid.slice(0, 8) + '…';
-    }
-    function getUserEmail(uid) {
-      const u = allUsers.find(u => u.id === uid);
-      return u ? (u.email || '—') : '—';
+    function filterDeposits(filter, el) {
+      depFilter = filter;
+      document.querySelectorAll('#view-deposits .tab-bar .tab').forEach(t => t.classList.remove('on'));
+      if (el) el.classList.add('on');
+      renderDeposits();
     }
 
+    function renderDeposits() {
+      let list;
+      if (depFilter === 'all') {
+        list = allDeposits;
+      } else if (depFilter === 'pending') {
+        // ✅ FIX: use isPending() for the "Pending" tab too
+        list = allDeposits.filter(d => isPending(d.status));
+      } else {
+        list = allDeposits.filter(d => (d.status || '').toLowerCase() === depFilter);
+      }
+
+      if (!list.length) {
+        document.getElementById('deposits-table').innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--muted)">No deposits found</div>';
+        return;
+      }
+      let h = '<table><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Status</th><th>Ref</th><th>Date</th><th>Note</th></tr></thead><tbody>';
+      list.forEach(d => {
+        const statusVal = (d.status || '').toLowerCase();
+        const sc = statusVal === 'confirmed' || statusVal === 'completed'
+          ? 'badge-active'
+          : statusVal === 'rejected'
+          ? 'badge-rejected'
+          : 'badge-pending';
+        h += `<tr>
+          <td>
+            <div style="font-weight:600;font-size:13px">${getUserName(d.user_id)}</div>
+            <div style="font-size:11px;color:var(--muted)">${getUserEmail(d.user_id)}</div>
+          </td>
+          <td><span class="badge badge-active">${d.asset || '—'}</span></td>
+          <td style="font-weight:700;font-family:var(--font)">${d.amount ? fmt(d.amount) : '—'}</td>
+          <td><span class="badge ${sc}">${d.status ?? 'null'}</span></td>
+          <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(d.ref || d.id || '').slice(0, 14)}…</td>
+          <td style="color:var(--muted);font-size:12px">${fmtDate(d.created_at)}</td>
+          <td style="font-size:11px;color:var(--muted)">${d.admin_note || '—'}</td>
+        </tr>`;
+      });
+      h += '</tbody></table>';
+      document.getElementById('deposits-table').innerHTML = h;
+    }
+
+    // ============================================================
+    // MANUAL CREDIT
+    // ============================================================
     function populateCreditUserSelect() {
       const sel = document.getElementById('credit-user-sel');
       if (!sel) return;
@@ -1153,9 +1464,7 @@
 
       try {
         const newBal = (parseFloat(user.balance) || 0) + amount;
-        // 1. Update balance
         await dbPatch('profiles', { balance: newBal }, 'id=eq.' + uid);
-        // 2. Insert deposit record
         const ref = 'DEP_MANUAL_' + Date.now();
         await dbInsert('deposits', {
           user_id: uid, method: 'manual', asset: asset,
@@ -1163,12 +1472,10 @@
           ref: ref, status: 'confirmed',
           admin_note: 'Manually credited by admin'
         });
-        // 3. Insert transaction record
         await dbInsert('transactions', {
           user_id: uid, type: 'deposit', asset: asset,
           amount: '+$' + amount.toFixed(2), status: 'completed', ref: ref
         });
-        // Update local state
         user.balance = newBal;
         updateStats();
         populateCreditUserSelect();
@@ -1191,149 +1498,50 @@
       }
     }
 
-    function renderDepositsPending() {
-      const pending = allDeposits.filter(d => d.status === 'pending');
-      document.getElementById('dep-pending-badge').textContent = pending.length + ' pending';
-      const el = document.getElementById('deposits-pending-table');
-      if (!el) return;
-      if (!pending.length) {
-        el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">✅ No pending deposits — all clear</div>';
-        return;
-      }
-      let h = '<table><thead><tr><th>User</th><th>Asset</th><th>Ref</th><th>Submitted</th><th>Credit Amount</th><th>Actions</th></tr></thead><tbody>';
-      pending.forEach(d => {
-        const name = getUserName(d.user_id);
-        const email = getUserEmail(d.user_id);
-        h += `<tr class="dep-row-pending">
-      <td>
-        <div style="font-weight:700;font-size:13px">${name}</div>
-        <div style="font-size:11px;color:var(--muted)">${email}</div>
-      </td>
-      <td><span class="badge badge-active">${d.asset || '—'}</span></td>
-      <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(d.ref || d.id || '').slice(0, 16)}…</td>
-      <td style="color:var(--muted);font-size:12px">${fmtDate(d.created_at)}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="color:var(--muted);font-weight:600;font-size:13px">$</span>
-          <input type="number" id="dep-amt-${d.id}" placeholder="Enter amount" min="0" step="0.01"
-            style="width:120px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;outline:none">
-        </div>
-      </td>
-      <td style="display:flex;gap:8px;align-items:center;padding-top:12px">
-        <button class="btn btn-green" onclick="confirmPendingDeposit('${d.id}','${d.user_id}','${d.asset || 'Crypto'}')">✓ Confirm & Credit</button>
-        <button class="btn btn-red" onclick="rejectDeposit('${d.id}')">✗ Reject</button>
-      </td>
-    </tr>`;
-      });
-      h += '</tbody></table>';
-      el.innerHTML = h;
-    }
-
-    async function confirmPendingDeposit(depId, userId, asset) {
-      const amtInput = document.getElementById('dep-amt-' + depId);
-      const amount = parseFloat(amtInput?.value) || 0;
-      if (amount <= 0) { showToast('Enter the confirmed amount first'); amtInput?.focus(); return; }
-      const user = allUsers.find(u => u.id === userId);
-      if (!user) { showToast('User not found'); return; }
-      if (!confirm('Confirm deposit of $' + amount.toFixed(2) + ' (' + asset + ') for ' + getUserName(userId) + '?')) return;
-      try {
-        const newBal = (parseFloat(user.balance) || 0) + amount;
-        await dbPatch('profiles', { balance: newBal }, 'id=eq.' + userId);
-        await dbPatch('deposits', { status: 'confirmed', credited: true, amount: amount, admin_note: 'Confirmed by admin' }, 'id=eq.' + depId);
-        await dbInsert('transactions', {
-          user_id: userId, type: 'deposit', asset: asset,
-          amount: '+$' + amount.toFixed(2), status: 'completed', ref: 'DEP_' + depId
-        });
-        user.balance = newBal;
-        const dep = allDeposits.find(d => d.id === depId);
-        if (dep) { dep.status = 'confirmed'; dep.credited = true; dep.amount = amount; }
-        updateStats(); renderDepositsPending(); renderDeposits(); populateCreditUserSelect();
-        showToast('✓ $' + amount.toFixed(2) + ' credited to ' + getUserName(userId));
-      } catch (ex) { showToast('Error: ' + ex.message); }
-    }
-
-    async function rejectDeposit(depId) {
-      const note = prompt('Reason for rejection (optional):');
-      if (note === null) return;
-      try {
-        await dbPatch('deposits', { status: 'rejected', admin_note: note || 'Rejected by admin' }, 'id=eq.' + depId);
-        const dep = allDeposits.find(d => d.id === depId);
-        if (dep) dep.status = 'rejected';
-        renderDepositsPending(); renderDeposits();
-        showToast('Deposit rejected');
-      } catch (ex) { showToast('Error: ' + ex.message); }
-    }
-
-    function filterDeposits(filter, el) {
-      depFilter = filter;
-      document.querySelectorAll('#view-deposits .tab-bar .tab').forEach(t => t.classList.remove('on'));
-      if (el) el.classList.add('on');
-      renderDeposits();
-    }
-
-    function renderDeposits() {
-      const list = depFilter === 'all' ? allDeposits : allDeposits.filter(d => d.status === depFilter);
-      if (!list.length) {
-        document.getElementById('deposits-table').innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--muted)">No deposits found</div>';
-        return;
-      }
-      let h = '<table><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Status</th><th>Ref</th><th>Date</th><th>Note</th></tr></thead><tbody>';
-      list.forEach(d => {
-        const sc = d.status === 'confirmed' ? 'badge-active' : d.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
-        h += `<tr>
-      <td>
-        <div style="font-weight:600;font-size:13px">${getUserName(d.user_id)}</div>
-        <div style="font-size:11px;color:var(--muted)">${getUserEmail(d.user_id)}</div>
-      </td>
-      <td><span class="badge badge-active">${d.asset || '—'}</span></td>
-      <td style="font-weight:700;font-family:var(--font)">${d.amount ? fmt(d.amount) : '—'}</td>
-      <td><span class="badge ${sc}">${d.status}</span></td>
-      <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(d.ref || d.id || '').slice(0, 14)}…</td>
-      <td style="color:var(--muted);font-size:12px">${fmtDate(d.created_at)}</td>
-      <td style="font-size:11px;color:var(--muted)">${d.admin_note || '—'}</td>
-    </tr>`;
-      });
-      h += '</tbody></table>';
-      document.getElementById('deposits-table').innerHTML = h;
-    }
-
+    // ============================================================
+    // INVESTMENTS
+    // ============================================================
     function renderInvestments() {
       if (!allInvestments.length) { document.getElementById('investments-table').innerHTML = '<div class="empty">No investments yet</div>'; return; }
       let h = '<table><thead><tr><th>User</th><th>Plan</th><th>Amount</th><th>Daily Rate</th><th>Earned</th><th>Status</th><th>Ends</th></tr></thead><tbody>';
       allInvestments.forEach(i => {
         const badgeClass = i.status === 'active' ? 'badge-active' : i.status === 'completed' ? 'badge-completed' : 'badge-rejected';
         h += `<tr>
-      <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(i.user_id || '').slice(0, 12)}…</td>
-      <td style="font-weight:700">${i.plan_name || i.plan || '—'}</td>
-      <td style="font-weight:700">${fmt(i.amount)}</td>
-      <td>${((parseFloat(i.daily_rate) || 0) * 100).toFixed(1)}%</td>
-      <td style="color:var(--green);font-weight:700">${fmt(i.earned)}</td>
-      <td><span class="badge ${badgeClass}">${i.status}</span></td>
-      <td style="color:var(--muted)">${i.end_date || '—'}</td>
-    </tr>`;
+          <td style="font-family:monospace;font-size:11px;color:var(--muted)">${(i.user_id || '').slice(0, 12)}…</td>
+          <td style="font-weight:700">${i.plan_name || i.plan || '—'}</td>
+          <td style="font-weight:700">${fmt(i.amount)}</td>
+          <td>${((parseFloat(i.daily_rate) || 0) * 100).toFixed(1)}%</td>
+          <td style="color:var(--green);font-weight:700">${fmt(i.earned)}</td>
+          <td><span class="badge ${badgeClass}">${i.status}</span></td>
+          <td style="color:var(--muted)">${i.end_date || '—'}</td>
+        </tr>`;
       });
       h += '</tbody></table>';
       document.getElementById('investments-table').innerHTML = h;
     }
 
+    // ============================================================
+    // NAV
+    // ============================================================
     function showTab(name, el) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
       document.querySelectorAll('.sb-item').forEach(s => s.classList.remove('active'));
       document.getElementById('view-' + name).classList.add('on');
-      el.classList.add('active');
+      if (el) el.classList.add('active');
       const titles = { overview: 'Dashboard Overview', users: 'User Management', withdrawals: 'Withdrawal Requests', deposits: 'Deposit History', investments: 'Investment Plans' };
       document.getElementById('main-title').textContent = titles[name] || name;
     }
 
     function showToast(msg) {
       const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
+      t.textContent = msg;
+      t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // Allow Enter key on login
-    document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && document.getElementById('admin-login-screen').style.display !== 'none') doAdminLogin(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && document.getElementById('admin-login-screen').style.display !== 'none') doAdminLogin();
+    });
   </script>
 </body>
-
 </html>
