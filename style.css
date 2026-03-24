@@ -1,4 +1,4 @@
-        *,
+*,
         *::before,
         *::after {
             box-sizing: border-box;
@@ -231,13 +231,34 @@
             transition: all .3s
         }
 
+        /* Hamburger open state — animate bars into X */
+        .hamburger.open .hbar:nth-child(1) {
+            transform: translateY(7px) rotate(45deg)
+        }
+        .hamburger.open .hbar:nth-child(2) {
+            opacity: 0
+        }
+        .hamburger.open .hbar:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg)
+        }
+
         .mobile-menu {
             display: none;
             flex-direction: column;
             gap: 16px;
             padding: 20px 24px;
             border-top: 1px solid var(--border);
-            background: rgba(5, 14, 20, .98)
+            background: rgba(5, 14, 20, .98);
+            /* ── ADDED: smooth slide-in transition ── */
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity .25s ease, transform .25s ease
+        }
+
+        /* ── ADDED: open state for animation ── */
+        .mobile-menu.open {
+            opacity: 1;
+            transform: translateY(0)
         }
 
         .mobile-links {
@@ -1111,7 +1132,6 @@
 
         /* ── RESPONSIVE ──────────────────────────────────────── */
 
-        /* Tablet & below: stack hero, show chart */
         @media(max-width:1024px) {
             .hero {
                 grid-template-columns: 1fr;
@@ -1140,7 +1160,6 @@
                 justify-content: center
             }
 
-            /* SHOW chart below hero text */
             .chart-wrap {
                 display: block;
                 width: 100%
@@ -1216,7 +1235,6 @@
             }
         }
 
-        /* Mobile: phones */
         @media(max-width:600px) {
             .hero {
                 padding: 28px 16px 40px;
@@ -1250,7 +1268,6 @@
                 font-size: 15px !important
             }
 
-            /* Chart on mobile — compact */
             .chart-card {
                 border-radius: 14px
             }
@@ -1423,7 +1440,6 @@
             }
         }
 
-        /* Very small phones */
         @media(max-width:380px) {
             h1 {
                 font-size: 28px
