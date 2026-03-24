@@ -253,13 +253,32 @@
             transition: all .3s
         }
 
+        /* === FIXED HAMBURGER ANIMATION === */
+        .hamburger.open .hbar:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        .hamburger.open .hbar:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger.open .hbar:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
         .mobile-menu {
             display: none;
             flex-direction: column;
             gap: 16px;
-            padding: 20px 24px;
+            padding: 0 24px;
             border-top: 1px solid var(--border);
-            background: rgba(5, 14, 20, .98)
+            background: rgba(5, 14, 20, .98);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .mobile-menu.open {
+            max-height: 520px;
+            padding: 20px 24px;
         }
 
         .mobile-links {
@@ -586,14 +605,6 @@
                 display: flex;
                 margin-left: auto
             }
-
-            .card-grid.c3 {
-                grid-template-columns: repeat(2, 1fr)
-            }
-
-            .card-grid.c2 {
-                grid-template-columns: 1fr
-            }
         }
 
         @media(max-width:600px) {
@@ -616,11 +627,6 @@
 
             .card-grid {
                 padding: 48px 16px
-            }
-
-            .card-grid.c3,
-            .card-grid.c2 {
-                grid-template-columns: 1fr
             }
 
             .page-hero {
@@ -656,7 +662,7 @@
                 <a href="services.html">Services</a>
                 <a href="investment.html">Investment Plans</a>
                 <div style="position:relative;display:inline-block">
-                    <a href="#" onclick="toggleDD(event,&#39;company-menu&#39;)">Company &#9662;</a>
+                    <a href="#" onclick="toggleDD(event,'company-menu')">Company &#9662;</a>
                     <div id="company-menu"
                         style="display:none;position:absolute;top:100%;left:0;background:#0b1e2d;border:1px solid rgba(0,229,195,.15);border-radius:12px;padding:8px;min-width:180px;z-index:200;box-shadow:0 16px 48px rgba(0,0,0,.4)">
                         <a href="About.html" class="ddlink">About Us</a>
@@ -671,9 +677,12 @@
                 <a href="signup.html" class="btn bp" style="padding:10px 20px;font-size:14px;">Open Account</a>
             </div>
             <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-                <span class="hbar"></span><span class="hbar"></span><span class="hbar"></span>
+                <span class="hbar"></span>
+                <span class="hbar"></span>
+                <span class="hbar"></span>
             </button>
         </div>
+
         <div class="mobile-menu" id="mobile-menu">
             <div class="mobile-links">
                 <a href="markets.html">Markets</a>
@@ -685,10 +694,8 @@
                 <a href="contact.html">Contact</a>
             </div>
             <div class="mobile-actions">
-                <a href="login.html" style="width:100%"><button class="ng" style="width:100%;padding:13px">Sign
-                        In</button></a>
-                <a href="signup.html" class="btn bp"
-                    style="width:100%;justify-content:center;padding:13px 20px;font-size:15px;">Open Account</a>
+                <a href="login.html" style="width:100%"><button class="ng" style="width:100%;padding:13px">Sign In</button></a>
+                <a href="signup.html" class="btn bp" style="width:100%;justify-content:center;padding:13px 20px;font-size:15px;">Open Account</a>
             </div>
         </div>
     </nav>
@@ -700,6 +707,7 @@
             <p>Last updated: January 1, 2025 · Please read these terms carefully before using Crypto Nova services.</p>
         </div>
     </div>
+
     <div class="content-wrap">
         <h2>1. Acceptance of Terms</h2>
         <p>By accessing or using Crypto Nova's platform, mobile applications, or any related services (collectively, the
@@ -827,20 +835,80 @@
             </div>
         </div>
     </footer>
+
     <script>
         const TDATA = [{ s: 'BTC/USD', p: '$84,230', c: '+2.45%', u: 1 }, { s: 'ETH/USD', p: '$3,210', c: '+1.87%', u: 1 }, { s: 'BNB/USD', p: '$412', c: '-0.54%', u: 0 }, { s: 'SOL/USD', p: '$178', c: '+3.21%', u: 1 }, { s: 'XRP/USD', p: '$0.621', c: '+0.98%', u: 1 }, { s: 'EUR/USD', p: '1.0842', c: '+0.12%', u: 1 }, { s: 'GBP/USD', p: '1.2634', c: '-0.08%', u: 0 }, { s: 'USD/JPY', p: '149.82', c: '+0.31%', u: 1 }, { s: 'DOGE/USD', p: '$0.142', c: '+5.14%', u: 1 }, { s: 'ADA/USD', p: '$0.489', c: '-1.23%', u: 0 }];
         (() => { document.getElementById('tt').innerHTML = [...TDATA, ...TDATA].map(t => `<div class="ti"><span class="sym">${t.s}</span><span>${t.p}</span><span class="${t.u ? 'up' : 'dn'}">${t.u ? '▲' : '▼'} ${t.c}</span></div>`).join(''); })();
-        (() => { const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('vis'); obs.unobserve(x.target); } }), { threshold: .1 }); document.querySelectorAll('.rev').forEach(el => obs.observe(el)); })();
-        window.addEventListener('scroll', () => { document.getElementById('nav').classList.toggle('sc', scrollY > 40); }, { passive: true });
-        (() => {
-            const btn = document.getElementById('hamburger'), menu = document.getElementById('mobile-menu');
-            if (!btn || !menu) return;
-            btn.addEventListener('click', () => { const o = btn.classList.toggle('open'); btn.setAttribute('aria-expanded', o); if (o) { menu.style.display = 'flex'; requestAnimationFrame(() => requestAnimationFrame(() => menu.classList.add('open'))); } else { menu.classList.remove('open'); menu.addEventListener('transitionend', () => { if (!menu.classList.contains('open')) menu.style.display = 'none'; }, { once: true }); } });
-            document.addEventListener('click', e => { if (!btn.contains(e.target) && !menu.contains(e.target) && menu.classList.contains('open')) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open'); menu.addEventListener('transitionend', () => { if (!menu.classList.contains('open')) menu.style.display = 'none'; }, { once: true }); } });
-            window.addEventListener('resize', () => { if (window.innerWidth > 960) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open'); menu.style.display = 'none'; } });
+
+        (() => { 
+            const obs = new IntersectionObserver(e => e.forEach(x => { 
+                if (x.isIntersecting) { 
+                    x.target.classList.add('vis'); 
+                    obs.unobserve(x.target); 
+                } 
+            }), { threshold: .1 }); 
+            document.querySelectorAll('.rev').forEach(el => obs.observe(el)); 
         })();
-        function toggleDD(e, id) { e.preventDefault(); e.stopPropagation(); const m = document.getElementById(id); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-        document.addEventListener('click', () => { document.querySelectorAll('[id$="-menu"]').forEach(m => m.style.display = 'none'); });
+
+        window.addEventListener('scroll', () => { 
+            document.getElementById('nav').classList.toggle('sc', scrollY > 40); 
+        }, { passive: true });
+
+        // ==================== FIXED HAMBURGER MENU ====================
+        (() => {
+            const btn = document.getElementById('hamburger');
+            const menu = document.getElementById('mobile-menu');
+            if (!btn || !menu) return;
+
+            function toggleMenu() {
+                const isOpen = btn.classList.toggle('open');
+                btn.setAttribute('aria-expanded', isOpen);
+
+                if (isOpen) {
+                    menu.style.display = 'flex';
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => menu.classList.add('open'));
+                    });
+                } else {
+                    menu.classList.remove('open');
+                    menu.addEventListener('transitionend', () => {
+                        if (!menu.classList.contains('open')) {
+                            menu.style.display = 'none';
+                        }
+                    }, { once: true });
+                }
+            }
+
+            btn.addEventListener('click', toggleMenu);
+
+            // Close when clicking outside
+            document.addEventListener('click', e => {
+                if (!btn.contains(e.target) && !menu.contains(e.target) && menu.classList.contains('open')) {
+                    toggleMenu();
+                }
+            });
+
+            // Close menu when resizing to desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 1024) {
+                    btn.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    menu.classList.remove('open');
+                    menu.style.display = 'none';
+                }
+            });
+        })();
+
+        function toggleDD(e, id) {
+            e.preventDefault();
+            e.stopPropagation();
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('[id$="-menu"]').forEach(m => m.style.display = 'none');
+        });
     </script>
 </body>
 
