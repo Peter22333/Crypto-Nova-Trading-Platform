@@ -1,4 +1,4 @@
-        // ── TICKER ───────────────────────────────────────────────────────────────────
+// ── TICKER ───────────────────────────────────────────────────────────────────
         const TDATA = [
             { s: 'BTC/USD', p: '$84,230', c: '+2.45%', u: true }, { s: 'ETH/USD', p: '$3,210', c: '+1.87%', u: true },
             { s: 'BNB/USD', p: '$412', c: '-0.54%', u: false }, { s: 'SOL/USD', p: '$178', c: '+3.21%', u: true },
@@ -201,13 +201,7 @@
         }, { threshold: .15 });
         document.querySelectorAll('.rev').forEach(el => ro.observe(el));
 
-        // ── HAMBURGER ────────────────────────────────────────────────────────────────
-        document.getElementById('hamburger').addEventListener('click', function () {
-            const m = document.getElementById('mobile-menu');
-            const open = m.style.display === 'flex';
-            m.style.display = open ? 'none' : 'flex';
-            this.setAttribute('aria-expanded', String(!open));
-        });
+        // ── HAMBURGER — REMOVED OLD DUPLICATE HANDLER (was here) ─────────────────────
 
         // ── DROPDOWN ─────────────────────────────────────────────────────────────────
         function toggleDD(e, id) {
@@ -220,17 +214,6 @@
         });
 
 
-
-
-
-
-
-
-
-
-
-
-        
 /* ══ TICKER ══ */
 const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12',c:'+1.82%',u:1},{s:'EUR/USD',p:'1.1084',c:'-0.21%',u:0},{s:'GBP/USD',p:'1.2650',c:'-0.34%',u:0},{s:'XAU/USD',p:'2,340.50',c:'+0.55%',u:1},{s:'SOL/USD',p:'148.30',c:'+3.12%',u:1},{s:'BNB/USD',p:'602.40',c:'-0.88%',u:0},{s:'ADA/USD',p:'0.4512',c:'+1.20%',u:1},{s:'XRP/USD',p:'0.5830',c:'+0.74%',u:1},{s:'DOGE/USD',p:'0.1612',c:'-1.10%',u:0}];
 (()=>{document.getElementById('tt').innerHTML=[...TICKS,...TICKS].map(x=>`<div class="ti"><span class="ts">${x.s}</span><span class="tp">$${x.p}</span><span class="${x.u?'tu':'td2'}">${x.c}</span></div>`).join('')})();
@@ -246,13 +229,11 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
         btn.setAttribute('aria-expanded',isOpen);
         if(isOpen){
             menu.style.display='flex';
-            // Force reflow then add open class for animation
             requestAnimationFrame(()=>{
                 requestAnimationFrame(()=>menu.classList.add('open'));
             });
         } else {
             menu.classList.remove('open');
-            // Wait for transition to finish before hiding
             menu.addEventListener('transitionend',()=>{
                 if(!menu.classList.contains('open'))menu.style.display='none';
             },{once:true});
@@ -297,7 +278,6 @@ const CE=(()=>{
     const cv=document.getElementById('cc'),ctx=cv.getContext('2d');
     const tt=document.getElementById('ctt'),bod=document.getElementById('cbody');
     let data=[],tab='1D',mouse=null,aid=null;
-    // Touch state
     let touchActive=false;
 
 function gen(n,base,vol,tr){
@@ -340,10 +320,8 @@ function draw(prog,m){
     const mn=Math.min(...sl),mx=Math.max(...sl),pad=(mx-mn)*.12,lo=mn-pad,hi=mx+pad;
     const tx=i=>(i/(data.length-1))*W,ty=v=>H-((v-lo)/(hi-lo))*(H*.88)-H*.06;
 
-    // Grid
     for(let g=0;g<6;g++){const y=ty(lo+(g/5)*(hi-lo));ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.strokeStyle='rgba(14,207,170,.05)';ctx.lineWidth=1;ctx.stroke()}
 
-    // Volume bars
     const bH=H*.08,bY=H-bH*.05;
     ctx.globalAlpha=.38;
     for(let i=0;i<sl.length;i++){
@@ -355,7 +333,6 @@ function draw(prog,m){
 
     const up=sl[sl.length-1]>=sl[0],lc=up?'#0ecfaa':'#e74c3c';
 
-    // Gradient
     const gr=ctx.createLinearGradient(0,0,0,H);
     gr.addColorStop(0,up?'rgba(14,207,170,.28)':'rgba(231,76,60,.22)');
     gr.addColorStop(.55,up?'rgba(14,207,170,.07)':'rgba(231,76,60,.05)');
@@ -364,12 +341,10 @@ function draw(prog,m){
     for(let i=0;i<sl.length;i++){if(i===0)ctx.lineTo(tx(0),ty(sl[0]));else{const cx=(tx(i-1)+tx(i))/2;ctx.bezierCurveTo(cx,ty(sl[i-1]),cx,ty(sl[i]),tx(i),ty(sl[i]))}}
     ctx.lineTo(tx(sl.length-1),H);ctx.closePath();ctx.fillStyle=gr;ctx.fill();
 
-    // Line
     ctx.beginPath();
     for(let i=0;i<sl.length;i++){if(i===0)ctx.moveTo(tx(0),ty(sl[0]));else{const cx=(tx(i-1)+tx(i))/2;ctx.bezierCurveTo(cx,ty(sl[i-1]),cx,ty(sl[i]),tx(i),ty(sl[i]))}}
     ctx.strokeStyle=lc;ctx.lineWidth=2.5;ctx.shadowColor=lc;ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;
 
-    // Crosshair
     if(m&&prog===1){
     const idx=Math.round((m.x/W)*(data.length-1));
     if(idx>=0&&idx<data.length){
@@ -382,21 +357,17 @@ function draw(prog,m){
         tt.style.display='block';
         let tlx=m.x+18,tly=m.y-44;
         if(tlx+175>W)tlx=m.x-185;if(tly<0)tly=8;
-        // Keep tooltip inside canvas on mobile
         if(tlx<4)tlx=4;
         tt.style.left=tlx+'px';tt.style.top=tly+'px';
     }
     }else tt.style.display='none';
 
-    // Live dot
     if(prog===1){const lx=tx(data.length-1),ly=ty(data[data.length-1]);ctx.beginPath();ctx.arc(lx,ly,4,0,Math.PI*2);ctx.fillStyle=lc;ctx.shadowColor=lc;ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0}
 }
 
-// Mouse events
 cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect();mouse={x:e.clientX-r.left,y:e.clientY-r.top};if(!aid)draw(1,mouse)});
 cv.addEventListener('mouseleave',()=>{mouse=null;tt.style.display='none';if(!aid)draw(1,null)});
 
-// Touch events for mobile
 cv.addEventListener('touchstart',e=>{
     e.preventDefault();
     touchActive=true;
