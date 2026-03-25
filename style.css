@@ -100,10 +100,11 @@
             max-width: 1240px;
             margin: 0 auto;
             padding: 0 24px;
-            height: 64px;
+            min-height: 64px;
             display: flex;
             align-items: center;
-            gap: 32px
+            gap: 32px;
+            flex-wrap: wrap
         }
 
         .nlogo {
@@ -248,7 +249,8 @@
             gap: 16px;
             padding: 20px 24px;
             border-top: 1px solid var(--border);
-            background: rgba(5, 14, 20, .98)
+            background: rgba(5, 14, 20, .98);
+            width: 100%
         }
 
         .mobile-menu.open {
