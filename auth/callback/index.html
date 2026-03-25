@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Confirmed | Crypto Nova</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #080d16;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: #0d1421;
+            border: 1px solid #1e2a3a;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .logo span {
+            color: #0db89e;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #8a9bb8;
+            font-size: 14px;
+        }
+
+        .loader {
+            margin: 20px auto;
+            border: 3px solid #1e2a3a;
+            border-top: 3px solid #0db89e;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .success {
+            color: #0db89e;
+        }
+
+        .error {
+            color: #ff4d4f;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #0db89e, #0a9e87);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <div class="logo">Crypto<span>Nova</span></div>
+
+        <h1 id="title">Confirming your email...</h1>
+        <div class="loader" id="loader"></div>
+        <p id="message">Please wait while we verify your account.</p>
+
+        <button id="btn" style="display:none;" onclick="goLogin()">Go to Login</button>
+    </div>
+
+    <script>
+        const supabase = window.supabase.createClient(
+            "https://xqkubletgifqdutybznz.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjA5OTMsImV4cCI6MjA4ODQzNjk5M30.TkweXseKRQuA7FoT7erYdUJMuGtYWYSZ7b7l9WCPq-8"
+        );
+
+        async function handleAuth() {
+            const { data, error } = await supabase.auth.getSession();
+
+            const title = document.getElementById("title");
+            const message = document.getElementById("message");
+            const loader = document.getElementById("loader");
+            const btn = document.getElementById("btn");
+
+            loader.style.display = "none";
+
+            if (error) {
+                title.innerText = "Verification Failed ❌";
+                message.innerHTML = `<span class="error">Invalid or expired link.</span>`;
+                btn.style.display = "block";
+                return;
+            }
+
+            if (data.session) {
+                title.innerText = "Email Confirmed 🎉";
+                message.innerHTML = `<span class="success">Your account is now active.</span><br>Redirecting...`;
+
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 3000);
+            } else {
+                title.innerText = "Something went wrong ⚠️";
+                message.innerText = "We couldn't verify your session.";
+                btn.style.display = "block";
+            }
+        }
+
+        function goLogin() {
+            window.location.href = "/";
+        }
+
+        handleAuth();
+    </script>
+
+</body>
+
+</html>
