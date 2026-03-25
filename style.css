@@ -1135,6 +1135,12 @@
         /* ── RESPONSIVE ──────────────────────────────────────── */
 
         @media(max-width:1024px) {
+            .ni {
+                flex-wrap: wrap;
+                height: auto;
+                min-height: 64px
+            }
+
             .hero {
                 grid-template-columns: 1fr;
                 text-align: center;
