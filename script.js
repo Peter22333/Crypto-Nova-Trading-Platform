@@ -227,17 +227,7 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
     btn.addEventListener('click',()=>{
         const isOpen=btn.classList.toggle('open');
         btn.setAttribute('aria-expanded',isOpen);
-        if(isOpen){
-            menu.style.display='flex';
-            requestAnimationFrame(()=>{
-                requestAnimationFrame(()=>menu.classList.add('open'));
-            });
-        } else {
-            menu.classList.remove('open');
-            menu.addEventListener('transitionend',()=>{
-                if(!menu.classList.contains('open'))menu.style.display='none';
-            },{once:true});
-        }
+        menu.classList.toggle('open', isOpen);
     });
 
     // Close menu when a link is clicked
@@ -245,9 +235,6 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
         btn.classList.remove('open');
         btn.setAttribute('aria-expanded','false');
         menu.classList.remove('open');
-        menu.addEventListener('transitionend',()=>{
-            if(!menu.classList.contains('open'))menu.style.display='none';
-        },{once:true});
     }));
 
     // Close menu on outside click
@@ -256,9 +243,6 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
             btn.classList.remove('open');
             btn.setAttribute('aria-expanded','false');
             menu.classList.remove('open');
-            menu.addEventListener('transitionend',()=>{
-                if(!menu.classList.contains('open'))menu.style.display='none';
-            },{once:true});
         }
     });
 
@@ -268,7 +252,6 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
             btn.classList.remove('open');
             btn.setAttribute('aria-expanded','false');
             menu.classList.remove('open');
-            menu.style.display='none';
         }
     });
 })();
