@@ -243,24 +243,16 @@
         }
 
         .mobile-menu {
-            max-height: 0;
-            overflow: hidden;
+            display: none;
             flex-direction: column;
             gap: 16px;
-            padding: 0 24px;
+            padding: 20px 24px;
             border-top: 1px solid var(--border);
-            background: rgba(5, 14, 20, .98);
-            opacity: 0;
-            transform: translateY(-8px);
-            transition: max-height .35s ease, opacity .25s ease, transform .25s ease, padding .25s ease
+            background: rgba(5, 14, 20, .98)
         }
 
         .mobile-menu.open {
-            display: flex;
-            max-height: 500px;
-            padding: 20px 24px;
-            opacity: 1;
-            transform: translateY(0)
+            display: flex
         }
 
         .mobile-links {
@@ -1135,11 +1127,6 @@
         /* ── RESPONSIVE ──────────────────────────────────────── */
 
         @media(max-width:1024px) {
-            .ni {
-                flex-wrap: wrap;
-                height: auto;
-                min-height: 64px
-            }
 
             .hero {
                 grid-template-columns: 1fr;
