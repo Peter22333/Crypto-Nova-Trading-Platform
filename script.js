@@ -227,17 +227,15 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
     btn.addEventListener('click',()=>{
         const isOpen=btn.classList.toggle('open');
         btn.setAttribute('aria-expanded',isOpen);
-        menu.classList.toggle('open', isOpen);
+        menu.classList.toggle('open',isOpen);
     });
 
-    // Close menu when a link is clicked
     menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
         btn.classList.remove('open');
         btn.setAttribute('aria-expanded','false');
         menu.classList.remove('open');
     }));
 
-    // Close menu on outside click
     document.addEventListener('click',e=>{
         if(!btn.contains(e.target)&&!menu.contains(e.target)&&menu.classList.contains('open')){
             btn.classList.remove('open');
@@ -246,9 +244,8 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
         }
     });
 
-    // Close menu on resize to desktop
     window.addEventListener('resize',()=>{
-        if(window.innerWidth>960){
+        if(window.innerWidth>1024){
             btn.classList.remove('open');
             btn.setAttribute('aria-expanded','false');
             menu.classList.remove('open');
