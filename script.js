@@ -223,31 +223,24 @@ const TICKS=[{s:'BTC/USD',p:'84,230.90',c:'+2.45%',u:1},{s:'ETH/USD',p:'3,495.12
     const btn=document.getElementById('hamburger');
     const menu=document.getElementById('mobile-menu');
     if(!btn||!menu)return;
-
-    btn.addEventListener('click',()=>{
+    btn.addEventListener('click',e=>{
+        e.stopPropagation();
         const isOpen=btn.classList.toggle('open');
-        btn.setAttribute('aria-expanded',isOpen);
         menu.classList.toggle('open',isOpen);
     });
-
     menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
         btn.classList.remove('open');
-        btn.setAttribute('aria-expanded','false');
         menu.classList.remove('open');
     }));
-
     document.addEventListener('click',e=>{
-        if(!btn.contains(e.target)&&!menu.contains(e.target)&&menu.classList.contains('open')){
+        if(!btn.contains(e.target)&&!menu.contains(e.target)){
             btn.classList.remove('open');
-            btn.setAttribute('aria-expanded','false');
             menu.classList.remove('open');
         }
     });
-
     window.addEventListener('resize',()=>{
         if(window.innerWidth>1024){
             btn.classList.remove('open');
-            btn.setAttribute('aria-expanded','false');
             menu.classList.remove('open');
         }
     });
