@@ -2452,8 +2452,10 @@
   }
 
   try {
-    // 1. Insert deposit record (pending)
-    await sb.insert('deposits', {
+    console.log('Attempting to insert deposit for user:', uid);
+
+    // Insert deposit
+    const depositResult = await sb.insert('deposits', {
       user_id: uid,
       method: selectedMethod || 'crypto',
       asset: asset,
@@ -2465,7 +2467,9 @@
       admin_note: 'Submitted by user'
     });
 
-    // 2. Insert transaction record
+    console.log('Deposit insert result:', depositResult);
+
+    // Insert transaction
     await sb.insert('transactions', {
       user_id: uid,
       type: 'deposit',
@@ -2475,9 +2479,9 @@
       ref: depRef
     });
 
-    console.log('✅ Deposit successfully saved to database. Ref:', depRef);
+    console.log('✅ Deposit saved successfully. Ref:', depRef);
 
-    // Save locally for success screen
+    // Local state
     const dep = {
       id: depRef,
       method: selectedMethod,
@@ -2491,19 +2495,24 @@
 
     if (!STATE.deposits) STATE.deposits = [];
     STATE.deposits.unshift(dep);
-
     saveState();
 
-    // Switch to success panel
+    // Go to success
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-5').classList.add('active');
-
     buildSuccessPanel();
-    showToast('Deposit request submitted successfully! Pending admin review.', 'success');
+
+    showToast('Deposit submitted successfully! Pending admin review.', 'success');
 
   } catch (error) {
-    console.error('❌ Failed to save deposit:', error);
-    showToast('Failed to save deposit to database. Please try again or contact support.', 'error');
+    console.error('❌ Deposit insert failed:', error);
+    
+    let errorMsg = error.message || JSON.stringify(error);
+    if (errorMsg.includes('new row violates row-level security policy')) {
+      errorMsg = 'Permission error - User cannot insert deposit. Check RLS policies.';
+    }
+
+    showToast('Failed to save deposit: ' + errorMsg, 'error');
 
     // Still show success screen
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -2511,7 +2520,6 @@
     buildSuccessPanel();
   }
 }
-
     /* ═══════════════════════════
        SUCCESS PANEL
     ═══════════════════════════ */
