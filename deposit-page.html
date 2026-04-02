@@ -2686,6 +2686,22 @@
       } catch (e) { }
       window.location.href = 'login.html';
     }
+    /*TEST*/
+    async insert(table, body) {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: sb._h(),
+    body: JSON.stringify(body)
+  });
+
+  if (!r.ok) {
+    const err = await r.text();
+    console.error("INSERT ERROR:", err);
+    return { error: err };
+  }
+
+  return r.json();
+}
 
     /* spinner style */
     var style = document.createElement('style');
