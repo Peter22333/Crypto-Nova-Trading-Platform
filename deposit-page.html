@@ -2435,7 +2435,7 @@
       item.style.opacity = '1';
     }
 
-    async function finishDeposit() {
+   async function finishDeposit() {
   const feeRates = { crypto: 0, bank: 0, card: 0.015 };
   const fee = depositAmount * (feeRates[selectedMethod] || 0);
   const depRef = 'DEP_' + Date.now().toString(36).toUpperCase();
@@ -2452,10 +2452,10 @@
   }
 
   try {
-    console.log('Attempting to insert deposit for user:', uid);
+    console.log('🔄 Starting deposit insert for user:', uid, 'amount:', depositAmount);
 
     // Insert deposit
-    const depositResult = await sb.insert('deposits', {
+    const depositData = {
       user_id: uid,
       method: selectedMethod || 'crypto',
       asset: asset,
@@ -2464,10 +2464,11 @@
       credited: false,
       ref: depRef,
       status: 'pending',
-      admin_note: 'Submitted by user'
-    });
+      admin_note: 'User submitted via deposit page'
+    };
 
-    console.log('Deposit insert result:', depositResult);
+    const depositResult = await sb.insert('deposits', depositData);
+    console.log('✅ Deposit insert result:', depositResult);
 
     // Insert transaction
     await sb.insert('transactions', {
@@ -2479,9 +2480,9 @@
       ref: depRef
     });
 
-    console.log('✅ Deposit saved successfully. Ref:', depRef);
+    console.log('✅ Transaction insert successful');
 
-    // Local state
+    // Local state for success screen
     const dep = {
       id: depRef,
       method: selectedMethod,
@@ -2505,14 +2506,8 @@
     showToast('Deposit submitted successfully! Pending admin review.', 'success');
 
   } catch (error) {
-    console.error('❌ Deposit insert failed:', error);
-    
-    let errorMsg = error.message || JSON.stringify(error);
-    if (errorMsg.includes('new row violates row-level security policy')) {
-      errorMsg = 'Permission error - User cannot insert deposit. Check RLS policies.';
-    }
-
-    showToast('Failed to save deposit: ' + errorMsg, 'error');
+    console.error('❌ Deposit insert FAILED:', error);
+    showToast('Failed to save deposit to database. Error: ' + (error.message || 'Unknown error'), 'error');
 
     // Still show success screen
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
