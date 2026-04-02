@@ -2524,27 +2524,35 @@
        SUCCESS PANEL
     ═══════════════════════════ */
     function buildSuccessPanel() {
-      var lastDep = STATE.deposits && STATE.deposits[0];
-      var amt = lastDep ? lastDep.amount : depositAmount;
-      document.getElementById('success-balance').textContent = '$' + amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      document.getElementById('success-btc-equiv').textContent = 'Pending admin approval';
-      // Do NOT update topbar balance — it hasn't changed yet
+  const lastDep = STATE.deposits && STATE.deposits[0];
+  const amt = lastDep ? lastDep.amount : depositAmount;
 
-      // Summary
-      var lastDep = STATE.deposits && STATE.deposits[0];
-      if (lastDep) {
-        var methodLabels = { crypto: 'Cryptocurrency', bank: 'Bank Transfer', card: 'Card Payment' };
-        document.getElementById('deposit-summary').innerHTML =
-          '<div class="ds-row"><span class="ds-key">Deposit Method</span><span class="ds-val">' + (methodLabels[lastDep.method] || '—') + '</span></div>' +
-          '<div class="ds-row"><span class="ds-key">Amount Submitted</span><span class="ds-val">$' + lastDep.amount.toFixed(2) + '</span></div>' +
-          '<div class="ds-row"><span class="ds-key">Fee</span><span class="ds-val">' + (lastDep.fee > 0 ? '$' + lastDep.fee.toFixed(2) : 'Free') + '</span></div>' +
-          '<div class="ds-row"><span class="ds-key">Reference</span><span class="ds-val">' + lastDep.ref + '</span></div>' +
-          '<div class="ds-row"><span class="ds-key">New Trading Balance</span><span class="ds-val" style="color:var(--teal)">$' + bal.toFixed(2) + '</span></div>';
-      }
+  document.getElementById('success-balance').textContent = 
+    '$' + amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      buildDepHistory();
-    }
+  document.getElementById('success-btc-equiv').textContent = 'Pending admin approval';
 
+  // Fixed summary (removed undefined 'bal')
+  if (lastDep) {
+    const methodLabels = { 
+      crypto: 'Cryptocurrency', 
+      bank: 'Bank Transfer', 
+      card: 'Card Payment' 
+    };
+
+    document.getElementById('deposit-summary').innerHTML = `
+      <div class="ds-row"><span class="ds-key">Deposit Method</span><span class="ds-val">${methodLabels[lastDep.method] || '—'}</span></div>
+      <div class="ds-row"><span class="ds-key">Amount Submitted</span><span class="ds-val">$${lastDep.amount.toFixed(2)}</span></div>
+      <div class="ds-row"><span class="ds-key">Fee</span><span class="ds-val">${lastDep.fee > 0 ? '$' + lastDep.fee.toFixed(2) : 'Free'}</span></div>
+      <div class="ds-row"><span class="ds-key">Reference</span><span class="ds-val">${lastDep.ref}</span></div>
+      <div class="ds-row"><span class="ds-key">Status</span><span class="ds-val" style="color:#f59e0b">PENDING ADMIN APPROVAL</span></div>
+    `;
+  } else {
+    document.getElementById('deposit-summary').innerHTML = '<div class="ds-row"><span class="ds-key">Status</span><span class="ds-val" style="color:#f59e0b">PENDING ADMIN APPROVAL</span></div>';
+  }
+
+  buildDepHistory();
+}
     /* ═══════════════════════════
        DEPOSIT HISTORY
     ═══════════════════════════ */
