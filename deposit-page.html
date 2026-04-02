@@ -2435,98 +2435,82 @@
       item.style.opacity = '1';
     }
 
-    function finishDeposit() {
-      // DO NOT credit balance — admin will approve manually
-      var feeRates = { crypto: 0, bank: 0, card: 0.015 };
-      var fee = depositAmount * (feeRates[selectedMethod] || 0);
-      var credited = depositAmount - fee;
-      var depRef = 'DEP' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    async function finishDeposit() {
+  const feeRates = { crypto: 0, bank: 0, card: 0.015 };
+  const fee = depositAmount * (feeRates[selectedMethod] || 0);
+  const depRef = 'DEP_' + Date.now().toString(36).toUpperCase();
 
-      // Save deposit to Supabase as PENDING (not credited)
-      var uid = sb._uid();
-      var asset = selectedMethod === 'crypto' ? (document.getElementById('crypto-coin') ? document.getElementById('crypto-coin').value : 'BTC') : 'USD';
-      if (uid) {
-        // Insert deposit — show visible error if it fails
-        sb.insert('deposits', {
-          user_id: uid,
-          method: selectedMethod || 'crypto',
-          asset: asset,
-          amount: depositAmount,
-          fee: fee,
-          credited: false,
-          ref: depRef,
-          status: 'pending'
-        }).then(function (r) {
-          if (r && r.error) {
-            // Visible error on the success screen
-            var errDiv = document.getElementById('deposit-save-error');
-            if (!errDiv) {
-              errDiv = document.createElement('div');
-              errDiv.id = 'deposit-save-error';
-              errDiv.style.cssText = 'background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;font-size:13px;color:#dc2626;margin:16px 0;line-height:1.6';
-              var successPanel = document.getElementById('panel-success') || document.querySelector('.panel.active');
-              if (successPanel) successPanel.insertBefore(errDiv, successPanel.firstChild);
-            }
-            errDiv.innerHTML = '<strong>⚠️ Note:</strong> Deposit submitted but could not be saved to database: ' + JSON.stringify(r.error) + '<br>Please contact support with ref: ' + depRef;
-            console.error('Deposit insert error:', r.error);
-          } else {
-            console.log('✅ Deposit saved to Supabase successfully. Ref:', depRef);
-          }
-        }).catch(function (e) {
-          console.error('Deposit insert failed:', e);
-        });
+  const asset = selectedMethod === 'crypto' 
+    ? (document.getElementById('crypto-coin')?.value || 'BTC') 
+    : 'USD';
 
-        sb.insert('transactions', {
-          user_id: uid,
-          type: 'deposit',
-          asset: asset,
-          amount: '+$' + depositAmount.toFixed(2),
-          status: 'pending',
-          ref: depRef
-        }).catch(function (e) { console.error('Transaction insert failed:', e); });
-      } else {
-        // uid is null — user session lost
-        console.error('No user ID found — session may have expired');
-        var errDiv = document.createElement('div');
-        errDiv.style.cssText = 'background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;font-size:13px;color:#dc2626;margin:16px 0';
-        errDiv.innerHTML = '⚠️ Session expired. Your deposit of $' + depositAmount.toFixed(2) + ' (Ref: ' + depRef + ') was submitted but could not be recorded. Please contact support.';
-        var panel = document.querySelector('.panel.active');
-        if (panel) panel.insertBefore(errDiv, panel.firstChild);
-      }
+  const uid = sb._uid();
 
-      var dep = {
-        id: depRef,
-        method: selectedMethod,
-        amount: depositAmount,
-        fee: fee,
-        credited: credited,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        ref: depRef,
-        status: 'pending'
-      };
-      if (!STATE.deposits) STATE.deposits = [];
-      STATE.deposits.unshift(dep);
-      STATE.transactions.unshift({
-        id: dep.id, type: 'deposit',
-        asset: asset,
-        amount: '$' + credited.toFixed(2),
-        date: dep.date, hash: dep.ref, status: 'pending'
-      });
-      saveState();
+  if (!uid) {
+    showToast('Session expired. Please log in again.', 'error');
+    return;
+  }
 
-      // Go to success
-      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
-      document.getElementById('panel-5').classList.add('active');
-      // Update step bar to step 5
-      for (var i = 1; i <= 5; i++) {
-        var s = document.getElementById('step' + i);
-        s.classList.remove('active', 'done');
-        if (i < 5) s.classList.add('done'); else s.classList.add('active');
-        if (i < 5) document.getElementById('div' + i).classList.add('done');
-      }
-      buildSuccessPanel();
-    }
+  try {
+    // 1. Insert deposit record (pending)
+    await sb.insert('deposits', {
+      user_id: uid,
+      method: selectedMethod || 'crypto',
+      asset: asset,
+      amount: depositAmount,
+      fee: fee,
+      credited: false,
+      ref: depRef,
+      status: 'pending',
+      admin_note: 'Submitted by user'
+    });
+
+    // 2. Insert transaction record
+    await sb.insert('transactions', {
+      user_id: uid,
+      type: 'deposit',
+      asset: asset,
+      amount: '+$' + depositAmount.toFixed(2),
+      status: 'pending',
+      ref: depRef
+    });
+
+    console.log('✅ Deposit successfully saved to database. Ref:', depRef);
+
+    // Save locally for success screen
+    const dep = {
+      id: depRef,
+      method: selectedMethod,
+      amount: depositAmount,
+      fee: fee,
+      credited: depositAmount - fee,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      ref: depRef,
+      status: 'pending'
+    };
+
+    if (!STATE.deposits) STATE.deposits = [];
+    STATE.deposits.unshift(dep);
+
+    saveState();
+
+    // Switch to success panel
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-5').classList.add('active');
+
+    buildSuccessPanel();
+    showToast('Deposit request submitted successfully! Pending admin review.', 'success');
+
+  } catch (error) {
+    console.error('❌ Failed to save deposit:', error);
+    showToast('Failed to save deposit to database. Please try again or contact support.', 'error');
+
+    // Still show success screen
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-5').classList.add('active');
+    buildSuccessPanel();
+  }
+}
 
     /* ═══════════════════════════
        SUCCESS PANEL
