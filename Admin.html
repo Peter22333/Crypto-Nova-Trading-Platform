@@ -952,7 +952,7 @@
     const [users, withdrawals, deposits, investments] = await Promise.all([
       dbGet('profiles', 'select=*&order=created_at.desc'),
       dbGet('withdrawals', 'select=*&order=created_at.desc'),
-      dbGet('deposits', 'select=*,profiles(full_name,email)&order=created_at.desc'),
+      dbGet('deposits', 'select=*&order=created_at.desc'),
       dbGet('investments', 'select=*&order=created_at.desc')
     ]);
 
