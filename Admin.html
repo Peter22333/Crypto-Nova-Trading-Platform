@@ -830,52 +830,51 @@
 
 
 <script>
-    const SUPA_URL = 'https://xqkubletgifqdutybznz.supabase.co';
-    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjA5OTMsImV4cCI6MjA4ODQzNjk5M30.TkweXseKRQuA7FoT7erYdUJMuGtYWYSZ7b7l9WCPq-8';
+const SUPA_URL = 'https://xqkubletgifqdutybznz.supabase.co';
+const SUPA_KEY = 'sb_publishable_9ENF_0EI8C_exZ7aDVhrXw_u0fYBM4I';
+let SERVICE_KEY = null;
 
-    // 🔒 ONLY this email can access the admin panel
-    const ADMIN_EMAIL = 'adeotipeter434@gmail.com';
+// 🔒 ONLY this email can access the admin panel
+const ADMIN_EMAIL = 'adeotipeter434@gmail.com';
+let ADMIN_TOKEN = null;
+let allUsers = [], allWithdrawals = [], allDeposits = [], allInvestments = [];
+let wFilter = 'pending';
 
-    let ADMIN_TOKEN = null;
-    let allUsers = [], allWithdrawals = [], allDeposits = [], allInvestments = [];
-    let wFilter = 'pending';
-
-    function adminH() { return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }; }
-
-    async function doAdminLogin() {
+function adminH() {
+  return {
+    'apikey': SERVICE_KEY || SUPA_KEY,
+    'Authorization': 'Bearer ' + (SERVICE_KEY || ADMIN_TOKEN),
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+}
+async function doAdminLogin() {
   const email = document.getElementById('admin-email').value.trim();
   const pw = document.getElementById('admin-pw').value;
   const err = document.getElementById('admin-err');
   const btn = document.getElementById('admin-login-btn');
-
   err.style.display = 'none'; 
   btn.disabled = true; 
   btn.textContent = 'Signing in…';
-
   try {
     const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
       headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pw })
     });
-
     const d = await r.json();
-
     if (d.access_token) {
       ADMIN_TOKEN = d.access_token;
+      SERVICE_KEY = 'sb_secret_I6U4M1d1wl0rC-wwp4PSmA_3i2uFaOl';
       document.getElementById('admin-login-screen').style.display = 'none';
       document.getElementById('admin-dashboard').style.display = 'block';
       document.getElementById('admin-name-label').textContent = d.user?.email || 'Admin';
-
-      // Small delay before loading data
       setTimeout(() => loadAll(), 800);
       return;
     }
-
     let msg = d.error_description || d.message || 'Login failed.';
     err.style.display = 'block'; 
     err.textContent = msg;
-
   } catch (ex) {
     err.style.display = 'block';
     err.textContent = 'Network error. Please try again.';
