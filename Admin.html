@@ -366,7 +366,7 @@ async function doAdminLogin() {
       document.getElementById('admin-name-label').textContent = d.user?.email?.split('@')[0] || 'Admin';
 
       // Check if service key is configured
-      if (SUPA_SERVICE_KEY === 'YOUR_SERVICE_ROLE_KEY_HERE') {
+      if (SUPA_SERVICE_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc') {
         showToast('⚠️  Add your service_role key to the admin panel for full access', 'warn');
         console.warn('Service role key not configured. See instructions in HTML comments.');
       }
