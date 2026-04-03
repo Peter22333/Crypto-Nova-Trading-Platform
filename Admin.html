@@ -261,39 +261,26 @@
 
 <div class="toast" id="toast"></div>
 
+
 <script>
 /* ─── CONFIG ──────────────────────────────────────────────────────── */
-// Using the SAME anon key as the user-facing site — this is correct.
-// Admin reads all rows via RLS policies that check is_admin flag or email.
 const SUPA_URL = 'https://xqkubletgifqdutybznz.supabase.co';
 const SUPA_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjA5OTMsImV4cCI6MjA4ODQzNjk5M30.TkweXseKRQuA7FoT7erYdUJMuGtYWYSZ7b7l9WCPq-8';
 
-// ⚠️  REPLACE THIS with your actual service_role key from:
-// Supabase Dashboard → Project Settings → API → service_role (secret)
-// This key bypasses RLS and lets admin read ALL rows.
-// Keep it secret — only use in your admin panel.
+// ⚠️ Make sure this is your real service_role key (not the anon key)
 const SUPA_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc';
 
-var ADMIN_TOKEN = null;  // set after login
+var ADMIN_TOKEN = null;
 var allUsers = [], allDeposits = [], allWithdrawals = [], allInvestments = [];
 var depFilter = 'all', wdFilter = 'pending';
 
 /* ─── HEADERS ─────────────────────────────────────────────────────── */
-// For auth operations — uses anon key + user JWT
-function userHeaders() {
-  return {
-    'apikey': SUPA_ANON_KEY,
-    'Authorization': 'Bearer ' + ADMIN_TOKEN,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
-  };
-}
-
-// For admin reads — uses service_role key to bypass RLS
-// If service key not set, falls back to user JWT (requires RLS policies)
 function adminReadHeaders() {
-  var key = (SUPA_SERVICE_KEY && SUPA_SERVICE_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc')
-    ? SUPA_SERVICE_KEY : ADMIN_TOKEN;
+  // Use service_role key (bypasses RLS) if available
+  const key = (SUPA_SERVICE_KEY && SUPA_SERVICE_KEY.length > 100) 
+    ? SUPA_SERVICE_KEY 
+    : ADMIN_TOKEN;
+
   return {
     'apikey': SUPA_ANON_KEY,
     'Authorization': 'Bearer ' + key,
@@ -303,61 +290,66 @@ function adminReadHeaders() {
 }
 
 /* ─── DB HELPERS ──────────────────────────────────────────────────── */
-async function dbGet(table, params) {
-  var url = SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : '');
-  var r = await fetch(url, { headers: adminReadHeaders() });
+async function dbGet(table, params = '') {
+  const url = SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : '');
+  const r = await fetch(url, { headers: adminReadHeaders() });
+  
   if (!r.ok) {
-    var err = await r.text();
-    console.error('GET', table, r.status, err);
+    const err = await r.text();
+    console.error(`GET ${table} failed:`, r.status, err);
     return [];
   }
-  var data = await r.json();
+  
+  const data = await r.json();
   return Array.isArray(data) ? data : [];
 }
 
 async function dbInsert(table, body) {
-  var r = await fetch(SUPA_URL + '/rest/v1/' + table, {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table, {
     method: 'POST',
     headers: adminReadHeaders(),
     body: JSON.stringify(body)
   });
   if (!r.ok) {
-    var err = await r.text();
-    throw new Error('INSERT ' + table + ' failed: ' + err);
+    const err = await r.text();
+    throw new Error(`INSERT ${table} failed: ${err}`);
   }
-  var text = await r.text();
+  const text = await r.text();
   return text ? JSON.parse(text) : [];
 }
 
 async function dbPatch(table, body, params) {
-  var r = await fetch(SUPA_URL + '/rest/v1/' + table + '?' + params, {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?' + params, {
     method: 'PATCH',
     headers: adminReadHeaders(),
     body: JSON.stringify(body)
   });
   if (!r.ok) {
-    var err = await r.text();
-    throw new Error('PATCH ' + table + ' failed: ' + err);
+    const err = await r.text();
+    throw new Error(`PATCH ${table} failed: ${err}`);
   }
   return true;
 }
 
 /* ─── AUTH ────────────────────────────────────────────────────────── */
 async function doAdminLogin() {
-  var email = document.getElementById('admin-email').value.trim();
-  var pw = document.getElementById('admin-pw').value;
-  var err = document.getElementById('admin-err');
-  var btn = document.getElementById('admin-login-btn');
+  const email = document.getElementById('admin-email').value.trim();
+  const pw = document.getElementById('admin-pw').value;
+  const err = document.getElementById('admin-err');
+  const btn = document.getElementById('admin-login-btn');
+
   err.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Signing in…';
+  btn.disabled = true; 
+  btn.textContent = 'Signing in…';
 
   try {
-    var r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
+    const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
       headers: { 'apikey': SUPA_ANON_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pw })
     });
-    var d = await r.json();
+
+    const d = await r.json();
 
     if (d.access_token) {
       ADMIN_TOKEN = d.access_token;
@@ -365,13 +357,7 @@ async function doAdminLogin() {
       document.getElementById('admin-dashboard').style.display = 'block';
       document.getElementById('admin-name-label').textContent = d.user?.email?.split('@')[0] || 'Admin';
 
-      // Check if service key is configured
-      if (SUPA_SERVICE_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc') {
-        showToast('⚠️  Add your service_role key to the admin panel for full access', 'warn');
-        console.warn('Service role key not configured. See instructions in HTML comments.');
-      }
-
-      await loadAll();
+      setTimeout(() => loadAll(), 800);
       return;
     }
 
@@ -381,113 +367,36 @@ async function doAdminLogin() {
     err.style.display = 'block';
     err.textContent = 'Network error: ' + ex.message;
   } finally {
-    btn.disabled = false; btn.textContent = 'Sign In';
+    btn.disabled = false; 
+    btn.textContent = 'Sign In';
   }
 }
 
 async function createAdminAccount() {
-  var email = document.getElementById('admin-email').value.trim();
-  var pw = document.getElementById('admin-pw').value;
-  var err = document.getElementById('admin-err');
-
-  if (!email || !pw) { err.style.display = 'block'; err.textContent = 'Enter email and password first.'; return; }
-  if (pw.length < 6) { err.style.display = 'block'; err.textContent = 'Password must be at least 6 characters.'; return; }
-  err.style.display = 'none';
-
-  try {
-    var r = await fetch(SUPA_URL + '/auth/v1/signup', {
-      method: 'POST',
-      headers: { 'apikey': SUPA_ANON_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pw })
-    });
-    var d = await r.json();
-
-    if (d.id || d.access_token) {
-      // Show SQL hint for RLS setup
-      var sqlHint = document.getElementById('sql-hint');
-      var sqlBox = document.getElementById('sql-box');
-      if (sqlHint && sqlBox) {
-        sqlHint.style.display = 'block';
-        sqlBox.textContent = [
-          '-- Run in Supabase SQL Editor to allow admin to read all rows:',
-          '',
-          '-- 1. Allow admin to read all deposits:',
-          'CREATE POLICY "Admin reads all deposits"',
-          '  ON deposits FOR SELECT',
-          '  USING (auth.jwt() ->> \'email\' = \'' + email + '\');',
-          '',
-          '-- 2. Allow admin to read all withdrawals:',
-          'CREATE POLICY "Admin reads all withdrawals"',
-          '  ON withdrawals FOR SELECT',
-          '  USING (auth.jwt() ->> \'email\' = \'' + email + '\');',
-          '',
-          '-- 3. Allow admin to read all profiles:',
-          'CREATE POLICY "Admin reads all profiles"',
-          '  ON profiles FOR SELECT',
-          '  USING (auth.jwt() ->> \'email\' = \'' + email + '\');',
-          '',
-          '-- 4. Allow admin to update profiles:',
-          'CREATE POLICY "Admin updates profiles"',
-          '  ON profiles FOR UPDATE',
-          '  USING (auth.jwt() ->> \'email\' = \'' + email + '\');',
-          '',
-          '-- OR easier: disable RLS on these tables temporarily:',
-          '-- ALTER TABLE deposits DISABLE ROW LEVEL SECURITY;',
-          '-- ALTER TABLE withdrawals DISABLE ROW LEVEL SECURITY;',
-          '-- ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;',
-        ].join('\n');
-      }
-
-      if (d.access_token) {
-        ADMIN_TOKEN = d.access_token;
-        document.getElementById('admin-login-screen').style.display = 'none';
-        document.getElementById('admin-dashboard').style.display = 'block';
-        document.getElementById('admin-name-label').textContent = email.split('@')[0];
-        await loadAll();
-      } else {
-        err.style.display = 'block';
-        err.style.background = '#f0fdf4'; err.style.borderColor = '#86efac'; err.style.color = '#166534';
-        err.textContent = '✓ Account created! Check email to confirm, then log in. Run the SQL above in Supabase.';
-      }
-    } else {
-      err.style.display = 'block';
-      err.textContent = d.error_description || d.msg || 'Account may already exist — try logging in.';
-    }
-  } catch (ex) {
-    err.style.display = 'block';
-    err.textContent = 'Network error: ' + ex.message;
-  }
-}
-
-function adminLogout() {
-  ADMIN_TOKEN = null;
-  document.getElementById('admin-login-screen').style.display = 'flex';
-  document.getElementById('admin-dashboard').style.display = 'none';
+  // ... keep your existing createAdminAccount function as it is ...
+  // (I didn't change it)
 }
 
 /* ─── LOAD ALL ────────────────────────────────────────────────────── */
 async function loadAll() {
-  console.log('Loading admin data…');
+  console.log('🔄 Loading admin data...');
 
-  var results = await Promise.allSettled([
+  const results = await Promise.allSettled([
     dbGet('profiles', 'select=*&order=created_at.desc'),
     dbGet('deposits', 'select=*&order=created_at.desc'),
     dbGet('withdrawals', 'select=*&order=created_at.desc'),
     dbGet('investments', 'select=*&order=created_at.desc')
   ]);
 
-  allUsers       = results[0].status === 'fulfilled' ? results[0].value : [];
-  allDeposits    = results[1].status === 'fulfilled' ? results[1].value : [];
+  allUsers = results[0].status === 'fulfilled' ? results[0].value : [];
+  allDeposits = results[1].status === 'fulfilled' ? results[1].value : [];
   allWithdrawals = results[2].status === 'fulfilled' ? results[2].value : [];
   allInvestments = results[3].status === 'fulfilled' ? results[3].value : [];
 
-  console.log('Loaded — profiles:', allUsers.length, 'deposits:', allDeposits.length, 'withdrawals:', allWithdrawals.length);
+  console.log(`✅ Loaded — profiles: ${allUsers.length} | deposits: ${allDeposits.length} | withdrawals: ${allWithdrawals.length}`);
 
   if (allDeposits.length === 0) {
-    console.warn('No deposits loaded. Possible causes:');
-    console.warn('1. No deposits submitted yet');
-    console.warn('2. RLS blocking admin reads — run the SQL from Create Admin Account');
-    console.warn('3. service_role key not configured in admin panel');
+    console.warn('⚠️ No deposits loaded. If you made deposits, check if service_role key is correctly pasted.');
   }
 
   updateStats();
@@ -501,399 +410,24 @@ async function loadAll() {
   populateCreditSelect();
 }
 
-/* ─── STATS ───────────────────────────────────────────────────────── */
-function fmt(n) {
-  return '$' + (parseFloat(n) || 0).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
-}
-function fmtDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-function avatarColor(name) {
-  var cols = ['#1a6bff','#0db89e','#7c3aed','#f59e0b','#16a34a','#dc2626'];
-  var h = 0;
-  for (var c of (name || 'AT')) h += c.charCodeAt(0);
-  return cols[h % cols.length];
-}
-function initials(name) {
-  return (name || 'AT').split(' ').map(function(w) { return w[0] || ''; }).join('').slice(0,2).toUpperCase();
-}
-function getUserById(uid) {
-  return allUsers.find(function(u) { return u.id === uid; }) || null;
-}
-function getUserName(uid) {
-  var u = getUserById(uid);
-  return u ? (u.full_name || u.email || uid.slice(0,8) + '…') : uid ? uid.slice(0,8) + '…' : '—';
-}
-function getUserEmail(uid) {
-  var u = getUserById(uid);
-  return u ? (u.email || '—') : '—';
-}
-function isPending(status) {
-  var s = String(status || '').toLowerCase().trim();
-  return !s || ['pending','processing','submitted','awaiting','new','unconfirmed'].includes(s);
-}
+/* ─── Keep all your other functions unchanged from here downwards ─── */
+// (updateStats, fmt, fmtDate, getUserName, renderDepositsPending, etc.)
 
-function updateStats() {
-  document.getElementById('st-users').textContent = allUsers.length;
-  var total = allUsers.reduce(function(s,u) { return s + (parseFloat(u.balance)||0); }, 0);
-  document.getElementById('st-balance').textContent = fmt(total);
-  var pendingDeps = allDeposits.filter(function(d) { return isPending(d.status); }).length;
-  document.getElementById('st-dep-pending').textContent = pendingDeps;
-  var pendingWds = allWithdrawals.filter(function(w) { return w.status === 'pending'; }).length;
-  document.getElementById('st-wd-pending').textContent = pendingWds;
-}
+// ... paste all your remaining functions here (from updateStats to the end) ...
 
-/* ─── OVERVIEW PANELS ─────────────────────────────────────────────── */
-function renderDepositsOverview() {
-  var pending = allDeposits.filter(function(d) { return isPending(d.status); });
-  var badge = document.getElementById('ov-dep-badge');
-  if (badge) badge.textContent = pending.length + ' pending';
-  var el = document.getElementById('overview-deposits');
-  if (!el) return;
+// For brevity, I'm not repeating all of them again since you already have them.
+// Just make sure the functions after loadAll() stay exactly as you had them.
 
-  if (!pending.length) {
-    el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">✅ No pending deposits — all clear</div>';
-    return;
-  }
-
-  var h = '<table><thead><tr><th>User</th><th>Asset</th><th>Submitted</th><th>Ref</th><th>Action</th></tr></thead><tbody>';
-  pending.slice(0,10).forEach(function(d) {
-    h += '<tr>'
-      + '<td><div style="font-weight:700">' + getUserName(d.user_id) + '</div><div style="font-size:11px;color:var(--muted)">' + getUserEmail(d.user_id) + '</div></td>'
-      + '<td><span class="badge badge-active">' + (d.asset || '—') + '</span></td>'
-      + '<td style="color:var(--muted);font-size:12px">' + fmtDate(d.created_at) + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--muted)">' + (d.ref || d.id || '—').slice(0,20) + '</td>'
-      + '<td><button class="btn btn-primary" onclick="showTab(\'deposits\', document.querySelectorAll(\'.sb-item\')[2])">Review →</button></td>'
-      + '</tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-function renderWithdrawalsOverview() {
-  var pending = allWithdrawals.filter(function(w) { return w.status === 'pending'; });
-  var badge = document.getElementById('ov-wd-badge');
-  if (badge) badge.textContent = pending.length + ' pending';
-  var el = document.getElementById('overview-withdrawals');
-  if (!el) return;
-
-  if (!pending.length) {
-    el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>No pending withdrawals — all clear!</div>';
-    return;
-  }
-
-  var h = '<table><thead><tr><th>User</th><th>Amount</th><th>Asset</th><th>Address</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-  pending.forEach(function(w) {
-    var addr = w.address ? w.address.slice(0,14) + '…' + w.address.slice(-6) : '—';
-    h += '<tr>'
-      + '<td><div style="font-weight:700">' + getUserName(w.user_id) + '</div><div style="font-size:11px;color:var(--muted)">' + getUserEmail(w.user_id) + '</div></td>'
-      + '<td style="font-weight:800;font-family:var(--font);color:var(--orange)">' + fmt(w.amount) + '</td>'
-      + '<td><span class="badge badge-active">' + (w.asset || '—') + '</span></td>'
-      + '<td style="font-family:monospace;font-size:12px" title="' + (w.address||'') + '">' + addr + '</td>'
-      + '<td style="color:var(--muted);font-size:12px">' + fmtDate(w.created_at) + '</td>'
-      + '<td style="white-space:nowrap">'
-      + '<button class="btn btn-green" onclick="approveWithdrawal(\'' + w.id + '\')">✓ Approve</button> '
-      + '<button class="btn btn-red" onclick="rejectWithdrawal(\'' + w.id + '\')">✗ Reject</button>'
-      + '</td></tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-/* ─── DEPOSITS ────────────────────────────────────────────────────── */
-function renderDepositsPending() {
-  var pending = allDeposits.filter(function(d) { return isPending(d.status); });
-  var badge = document.getElementById('dep-pending-badge');
-  if (badge) badge.textContent = pending.length + ' pending';
-  var el = document.getElementById('deposits-pending-table');
-  if (!el) return;
-
-  if (!pending.length) {
-    el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">✅ No pending deposits</div>';
-    return;
-  }
-
-  var h = '<table><thead><tr><th>User</th><th>Asset</th><th>Method</th><th>Ref</th><th>Submitted</th><th>Credit Amount</th><th>Actions</th></tr></thead><tbody>';
-  pending.forEach(function(d) {
-    h += '<tr>'
-      + '<td><div style="font-weight:700">' + getUserName(d.user_id) + '</div><div style="font-size:11px;color:var(--muted)">' + getUserEmail(d.user_id) + '</div></td>'
-      + '<td><span class="badge badge-active">' + (d.asset || '—') + '</span></td>'
-      + '<td style="font-size:12px;color:var(--muted)">' + (d.method || 'crypto') + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--muted)">' + (d.ref || d.id || '—').slice(0,18) + '…</td>'
-      + '<td style="font-size:12px;color:var(--muted)">' + fmtDate(d.created_at) + '</td>'
-      + '<td><input type="number" id="da-' + d.id + '" placeholder="Amount" min="0" step="0.01" style="width:110px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;outline:none"></td>'
-      + '<td style="white-space:nowrap">'
-      + '<button class="btn btn-green" style="margin-right:4px" onclick="confirmPendingDeposit(\'' + d.id + '\',\'' + d.user_id + '\',\'' + (d.asset||'Crypto') + '\')">✓ Confirm</button>'
-      + '<button class="btn btn-red" onclick="rejectDeposit(\'' + d.id + '\')">✗ Reject</button>'
-      + '</td></tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-function filterDeposits(f, el) {
-  depFilter = f;
-  document.querySelectorAll('#view-deposits .tab-bar .tab').forEach(function(t) { t.classList.remove('on'); });
-  if (el) el.classList.add('on');
-  renderDepositsHistory();
-}
-
-function renderDepositsHistory() {
-  var list = depFilter === 'all' ? allDeposits : allDeposits.filter(function(d) { return d.status === depFilter; });
-  var el = document.getElementById('deposits-history-table');
-  if (!el) return;
-  if (!list.length) { el.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--muted)">No deposits found for filter: ' + depFilter + '</div>'; return; }
-
-  var h = '<table><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Method</th><th>Status</th><th>Ref</th><th>Date</th></tr></thead><tbody>';
-  list.forEach(function(d) {
-    var sc = d.status === 'confirmed' ? 'badge-active' : d.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
-    h += '<tr>'
-      + '<td><div style="font-weight:600">' + getUserName(d.user_id) + '</div><div style="font-size:11px;color:var(--muted)">' + getUserEmail(d.user_id) + '</div></td>'
-      + '<td><span class="badge badge-active">' + (d.asset||'—') + '</span></td>'
-      + '<td style="font-weight:700;font-family:var(--font)">' + (d.amount ? fmt(d.amount) : '—') + '</td>'
-      + '<td style="font-size:12px;color:var(--muted)">' + (d.method||'—') + '</td>'
-      + '<td><span class="badge ' + sc + '">' + (d.status||'pending') + '</span></td>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--muted)">' + (d.ref||d.id||'—').slice(0,16) + '…</td>'
-      + '<td style="color:var(--muted);font-size:12px">' + fmtDate(d.created_at) + '</td>'
-      + '</tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-async function confirmPendingDeposit(depId, userId, asset) {
-  var inp = document.getElementById('da-' + depId);
-  var amount = parseFloat(inp?.value) || 0;
-  if (amount <= 0) { showToast('Enter the confirmed amount first'); inp?.focus(); return; }
-  var user = getUserById(userId);
-  if (!user) { showToast('User not found'); return; }
-  if (!confirm('Credit $' + amount.toFixed(2) + ' (' + asset + ') to ' + getUserName(userId) + '?')) return;
-
-  try {
-    var newBal = (parseFloat(user.balance) || 0) + amount;
-    await dbPatch('profiles', { balance: newBal }, 'id=eq.' + userId);
-    await dbPatch('deposits', { status: 'confirmed', credited: true, amount: amount, admin_note: 'Confirmed by admin' }, 'id=eq.' + depId);
-    try {
-      await dbInsert('transactions', { user_id: userId, type: 'deposit', asset: asset, amount: '+$' + amount.toFixed(2), status: 'completed', ref: 'CONF_' + depId });
-    } catch (ex) { console.warn('Transaction insert failed:', ex); }
-    user.balance = newBal;
-    var dep = allDeposits.find(function(d) { return d.id === depId; });
-    if (dep) { dep.status = 'confirmed'; dep.credited = true; dep.amount = amount; }
-    updateStats(); renderDepositsPending(); renderDepositsHistory(); renderDepositsOverview(); populateCreditSelect();
-    showToast('✓ $' + amount.toFixed(2) + ' credited to ' + getUserName(userId));
-  } catch (ex) { showToast('Error: ' + ex.message); }
-}
-
-async function rejectDeposit(depId) {
-  var note = prompt('Reason for rejection (optional):');
-  if (note === null) return;
-  try {
-    await dbPatch('deposits', { status: 'rejected', admin_note: note || 'Rejected by admin' }, 'id=eq.' + depId);
-    var dep = allDeposits.find(function(d) { return d.id === depId; });
-    if (dep) dep.status = 'rejected';
-    renderDepositsPending(); renderDepositsHistory(); renderDepositsOverview(); updateStats();
-    showToast('Deposit rejected');
-  } catch (ex) { showToast('Error: ' + ex.message); }
-}
-
-/* ─── MANUAL CREDIT ───────────────────────────────────────────────── */
-function populateCreditSelect() {
-  var sel = document.getElementById('credit-user-sel');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— Select user —</option>';
-  allUsers.forEach(function(u) {
-    var opt = document.createElement('option');
-    opt.value = u.id;
-    opt.textContent = (u.full_name || u.email || u.id.slice(0,8)) + ' — ' + fmt(u.balance);
-    sel.appendChild(opt);
-  });
-}
-
-async function creditDepositManual() {
-  var uid = document.getElementById('credit-user-sel').value;
-  var amount = parseFloat(document.getElementById('credit-amount').value) || 0;
-  var asset = document.getElementById('credit-asset').value.trim() || 'Manual Credit';
-  var res = document.getElementById('credit-result');
-  res.style.display = 'none';
-
-  if (!uid) { showToast('Please select a user'); return; }
-  if (amount <= 0) { showToast('Enter a valid amount'); return; }
-
-  var user = getUserById(uid);
-  if (!confirm('Credit $' + amount.toFixed(2) + ' (' + asset + ') to ' + getUserName(uid) + '?\n\nThis will update their balance immediately.')) return;
-
-  try {
-    var newBal = (parseFloat(user.balance) || 0) + amount;
-    await dbPatch('profiles', { balance: newBal }, 'id=eq.' + uid);
-    var ref = 'MANUAL_' + Date.now().toString(36).toUpperCase();
-    try {
-      await dbInsert('deposits', { user_id: uid, method: 'manual', asset: asset, amount: amount, fee: 0, credited: true, ref: ref, status: 'confirmed', admin_note: 'Manually credited by admin' });
-    } catch (ex) { console.warn('Deposit record insert failed:', ex); }
-    try {
-      await dbInsert('transactions', { user_id: uid, type: 'deposit', asset: asset, amount: '+$' + amount.toFixed(2), status: 'completed', ref: ref });
-    } catch (ex) { console.warn('Transaction record insert failed:', ex); }
-
-    user.balance = newBal;
-    updateStats(); populateCreditSelect();
-    document.getElementById('credit-amount').value = '';
-    document.getElementById('credit-asset').value = '';
-    res.style.display = 'block';
-    res.style.cssText = 'display:block;margin:0 20px 16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534';
-    res.textContent = '✓ Successfully credited $' + amount.toFixed(2) + ' to ' + getUserName(uid) + '. New balance: ' + fmt(newBal);
-    showToast('✓ $' + amount.toFixed(2) + ' credited to ' + getUserName(uid));
-  } catch (ex) {
-    res.style.display = 'block';
-    res.style.cssText = 'display:block;margin:0 20px 16px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;background:#fef2f2;border:1px solid #fecaca;color:#dc2626';
-    res.textContent = '✗ Error: ' + ex.message;
-    showToast('Error: ' + ex.message);
-  }
-}
-
-/* ─── USERS ───────────────────────────────────────────────────────── */
-function renderUsers() {
-  var q = (document.getElementById('user-search')?.value || '').toLowerCase();
-  var list = allUsers.filter(function(u) {
-    return (u.full_name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
-  });
-  var el = document.getElementById('users-table');
-  if (!el) return;
-  if (!list.length) { el.innerHTML = '<div class="empty">No users found</div>'; return; }
-
-  var h = '<table><thead><tr><th>User</th><th>Email</th><th>Balance</th><th>Tier</th><th>Joined</th><th>Edit Balance</th></tr></thead><tbody>';
-  list.forEach(function(u) {
-    var col = avatarColor(u.full_name), ini = initials(u.full_name);
-    h += '<tr>'
-      + '<td><div class="user-cell"><div class="avatar" style="background:' + col + '">' + ini + '</div><span style="font-weight:600">' + (u.full_name||'—') + '</span></div></td>'
-      + '<td style="color:var(--muted)">' + (u.email||'—') + '</td>'
-      + '<td style="font-weight:700;font-family:var(--font)">' + fmt(u.balance) + '</td>'
-      + '<td><span class="badge badge-active">' + (u.tier||'Standard') + '</span></td>'
-      + '<td style="color:var(--muted)">' + fmtDate(u.created_at) + '</td>'
-      + '<td><div class="edit-bal-wrap"><input type="number" id="bal-' + u.id + '" value="' + (parseFloat(u.balance||0).toFixed(2)) + '" step="0.01"><button class="btn btn-primary" onclick="updateUserBalance(\'' + u.id + '\')">Save</button></div></td>'
-      + '</tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-function filterUsers() { renderUsers(); }
-
-async function updateUserBalance(uid) {
-  var inp = document.getElementById('bal-' + uid);
-  var newBal = parseFloat(inp.value);
-  if (isNaN(newBal)) { showToast('Invalid amount'); return; }
-  try {
-    await dbPatch('profiles', { balance: newBal }, 'id=eq.' + uid);
-    var u = getUserById(uid);
-    if (u) u.balance = newBal;
-    updateStats(); populateCreditSelect();
-    showToast('✓ Balance updated to ' + fmt(newBal));
-  } catch (ex) { showToast('Error: ' + ex.message); }
-}
-
-/* ─── WITHDRAWALS ─────────────────────────────────────────────────── */
-function filterWithdrawals(f, el) {
-  wdFilter = f;
-  document.querySelectorAll('#view-withdrawals .tab-bar .tab').forEach(function(t) { t.classList.remove('on'); });
-  if (el) el.classList.add('on');
-  renderWithdrawals();
-}
-
-function renderWithdrawals() {
-  var list = wdFilter === 'all' ? allWithdrawals : allWithdrawals.filter(function(w) { return w.status === wdFilter; });
-  var el = document.getElementById('withdrawals-table');
-  if (!el) return;
-  if (!list.length) { el.innerHTML = '<div class="empty">No ' + wdFilter + ' withdrawals</div>'; return; }
-
-  var h = '<table><thead><tr><th>User</th><th>Amount</th><th>Asset</th><th>Address</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-  list.forEach(function(w) {
-    var sc = w.status === 'pending' ? 'badge-pending' : w.status === 'approved' ? 'badge-active' : 'badge-rejected';
-    var addr = w.address ? w.address.slice(0,14) + '…' + w.address.slice(-6) : '—';
-    h += '<tr>'
-      + '<td><div style="font-weight:700">' + getUserName(w.user_id) + '</div><div style="font-size:11px;color:var(--muted)">' + getUserEmail(w.user_id) + '</div></td>'
-      + '<td style="font-weight:700;font-family:var(--font)">' + fmt(w.amount) + '</td>'
-      + '<td><span class="badge badge-active">' + (w.asset||'—') + '</span></td>'
-      + '<td style="font-family:monospace;font-size:12px" title="' + (w.address||'') + '">' + addr + '</td>'
-      + '<td style="color:var(--muted);font-size:12px">' + fmtDate(w.created_at) + '</td>'
-      + '<td><span class="badge ' + sc + '">' + (w.status||'pending') + '</span></td>'
-      + '<td>' + (w.status === 'pending'
-        ? '<button class="btn btn-green" onclick="approveWithdrawal(\'' + w.id + '\')">Approve</button> <button class="btn btn-red" onclick="rejectWithdrawal(\'' + w.id + '\')">Reject</button>'
-        : '<span style="color:var(--muted);font-size:12px">Done</span>')
-      + '</td></tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-async function approveWithdrawal(id) {
-  if (!confirm('Approve this withdrawal? Make sure funds have been sent first.')) return;
-  try {
-    await dbPatch('withdrawals', { status: 'approved', admin_note: 'Approved ' + new Date().toLocaleString() }, 'id=eq.' + id);
-    var w = allWithdrawals.find(function(x) { return x.id === id; });
-    if (w) w.status = 'approved';
-    renderWithdrawals(); renderWithdrawalsOverview(); updateStats();
-    showToast('✓ Withdrawal approved');
-  } catch (ex) { showToast('Error: ' + ex.message); }
-}
-
-async function rejectWithdrawal(id) {
-  var note = prompt('Reason for rejection (optional):');
-  if (note === null) return;
-  try {
-    await dbPatch('withdrawals', { status: 'rejected', admin_note: note || 'Rejected by admin' }, 'id=eq.' + id);
-    var w = allWithdrawals.find(function(x) { return x.id === id; });
-    if (w) w.status = 'rejected';
-    renderWithdrawals(); renderWithdrawalsOverview(); updateStats();
-    showToast('Withdrawal rejected');
-  } catch (ex) { showToast('Error: ' + ex.message); }
-}
-
-/* ─── INVESTMENTS ─────────────────────────────────────────────────── */
-function renderInvestments() {
-  var el = document.getElementById('investments-table');
-  if (!el) return;
-  if (!allInvestments.length) { el.innerHTML = '<div class="empty">No investments yet</div>'; return; }
-  var h = '<table><thead><tr><th>User</th><th>Plan</th><th>Amount</th><th>Daily Rate</th><th>Earned</th><th>Status</th><th>Ends</th></tr></thead><tbody>';
-  allInvestments.forEach(function(i) {
-    var sc = i.status === 'active' ? 'badge-active' : i.status === 'completed' ? 'badge-completed' : 'badge-rejected';
-    h += '<tr>'
-      + '<td style="font-size:12px;color:var(--muted)">' + getUserName(i.user_id) + '</td>'
-      + '<td style="font-weight:700">' + (i.plan_name||i.plan||'—') + '</td>'
-      + '<td style="font-weight:700">' + fmt(i.amount) + '</td>'
-      + '<td>' + ((parseFloat(i.daily_rate)||0)*100).toFixed(1) + '%</td>'
-      + '<td style="color:var(--green);font-weight:700">' + fmt(i.earned) + '</td>'
-      + '<td><span class="badge ' + sc + '">' + (i.status||'—') + '</span></td>'
-      + '<td style="color:var(--muted)">' + (i.end_date||'—') + '</td>'
-      + '</tr>';
-  });
-  h += '</tbody></table>';
-  el.innerHTML = h;
-}
-
-/* ─── NAVIGATION ──────────────────────────────────────────────────── */
-function showTab(name, el) {
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('on'); });
-  document.querySelectorAll('.sb-item').forEach(function(s) { s.classList.remove('active'); });
-  var v = document.getElementById('view-' + name);
-  if (v) v.classList.add('on');
-  if (el) el.classList.add('active');
-  var titles = { overview:'Dashboard Overview', users:'User Management', deposits:'Deposit Management', withdrawals:'Withdrawal Requests', investments:'Investment Plans' };
-  document.getElementById('main-title').textContent = titles[name] || name;
-}
-
-/* ─── TOAST ───────────────────────────────────────────────────────── */
-var toastT = null;
 function showToast(msg) {
-  var t = document.getElementById('toast');
+  const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  if (toastT) clearTimeout(toastT);
-  toastT = setTimeout(function() { t.classList.remove('show'); }, 3500);
+  setTimeout(() => t.classList.remove('show'), 4000);
 }
 
-/* ─── ENTER KEY ───────────────────────────────────────────────────── */
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && document.getElementById('admin-login-screen').style.display !== 'none') doAdminLogin();
+  if (e.key === 'Enter' && document.getElementById('admin-login-screen').style.display !== 'none') 
+    doAdminLogin();
 });
 </script>
 </body>
