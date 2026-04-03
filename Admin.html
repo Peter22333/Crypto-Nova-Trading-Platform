@@ -843,50 +843,47 @@
     function adminH() { return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }; }
 
     async function doAdminLogin() {
-        const email = document.getElementById('admin-email').value.trim();
-        const pw = document.getElementById('admin-pw').value;
-        const err = document.getElementById('admin-err');
-        const btn = document.getElementById('admin-login-btn');
-        err.style.display = 'none'; btn.disabled = true; btn.textContent = 'Signing in…';
+  const email = document.getElementById('admin-email').value.trim();
+  const pw = document.getElementById('admin-pw').value;
+  const err = document.getElementById('admin-err');
+  const btn = document.getElementById('admin-login-btn');
 
-        // First try: standard password auth
-        try {
-            const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
-                method: 'POST',
-                headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password: pw })
-            });
-            const d = await r.json();
+  err.style.display = 'none'; 
+  btn.disabled = true; 
+  btn.textContent = 'Signing in…';
 
-            if (d.access_token) {
-                ADMIN_TOKEN = d.access_token;
-                document.getElementById('admin-login-screen').style.display = 'none';
-                document.getElementById('admin-dashboard').style.display = 'block';
-                document.getElementById('admin-name-label').textContent = d.user?.email || 'Admin';
-                loadAll();
-                return;
-            }
+  try {
+    const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw })
+    });
 
-            // Show detailed error to help debug
-            let msg = d.error_description || d.msg || d.message || d.error || 'Login failed.';
+    const d = await r.json();
 
-            // Common fixes guidance
-            if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials')) {
-                msg = 'Invalid email or password. Make sure you are using the email & password of a Supabase user account (not your Supabase dashboard login). Click "Create Admin Account" below if you have not done this yet.';
-            } else if (msg.toLowerCase().includes('confirm') || msg.toLowerCase().includes('email')) {
-                msg = 'Email not confirmed. Go to Supabase → Authentication → Users, find your account and click the 3-dot menu → "Send confirmation email", then confirm it and try again.';
-            }
+    if (d.access_token) {
+      ADMIN_TOKEN = d.access_token;
+      document.getElementById('admin-login-screen').style.display = 'none';
+      document.getElementById('admin-dashboard').style.display = 'block';
+      document.getElementById('admin-name-label').textContent = d.user?.email || 'Admin';
 
-            err.style.display = 'block'; err.textContent = msg;
-            btn.disabled = false; btn.textContent = 'Sign In to Admin';
-
-        } catch (ex) {
-            err.style.display = 'block';
-            err.textContent = 'Network error — check your internet connection and try again.';
-            btn.disabled = false; btn.textContent = 'Sign In to Admin';
-        }
+      // Small delay before loading data
+      setTimeout(() => loadAll(), 800);
+      return;
     }
 
+    let msg = d.error_description || d.message || 'Login failed.';
+    err.style.display = 'block'; 
+    err.textContent = msg;
+
+  } catch (ex) {
+    err.style.display = 'block';
+    err.textContent = 'Network error. Please try again.';
+  } finally {
+    btn.disabled = false; 
+    btn.textContent = 'Sign In to Admin';
+  }
+}
     async function createAdminAccount() {
         const email = document.getElementById('admin-email').value.trim();
         const pw = document.getElementById('admin-pw').value;
@@ -923,10 +920,20 @@
 
     function adminLogout() { ADMIN_TOKEN = null; document.getElementById('admin-login-screen').style.display = 'flex'; document.getElementById('admin-dashboard').style.display = 'none'; }
 
-    async function dbGet(table, params = '') {
-        const r = await fetch(SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : ''), { headers: adminH() });
-        return r.json();
-    }
+   async function dbGet(table, params = '') {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : ''), { 
+    headers: adminH() 
+  });
+  
+  const data = await r.json();
+
+  if (!r.ok) {
+    console.error(`Failed to fetch ${table}:`, data);
+    throw new Error(data.message || `Failed to load ${table}`);
+  }
+  
+  return Array.isArray(data) ? data : [];
+}
     async function dbInsert(table, body) {
         const r = await fetch(SUPA_URL + '/rest/v1/' + table, { method: 'POST', headers: adminH(), body: JSON.stringify(body) });
         if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.statusText); }
@@ -939,20 +946,38 @@
     }
 
     async function loadAll() {
-        try {
-            const [users, withdrawals, deposits, investments] = await Promise.all([
-                dbGet('profiles', 'select=*&order=created_at.desc'),
-                dbGet('withdrawals', 'select=*&order=created_at.desc'),
-                dbGet('deposits', 'select=*,profiles(full_name,email)&order=created_at.desc'),
-                dbGet('investments', 'select=*&order=created_at.desc'),
-            ]);
-            allUsers = Array.isArray(users) ? users : [];
-            allWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
-            allDeposits = Array.isArray(deposits) ? deposits : [];
-            allInvestments = Array.isArray(investments) ? investments : [];
-            updateStats(); renderUsers(); renderWithdrawals(); renderDeposits(); renderDepositsPending(); renderInvestments(); renderOverviewWithdrawals(); renderOverviewDeposits(); populateCreditUserSelect();
-        } catch (ex) { showToast('Error loading data: ' + ex.message); }
-    }
+  try {
+    console.log("🔄 Loading data as admin...");
+
+    const [users, withdrawals, deposits, investments] = await Promise.all([
+      dbGet('profiles', 'select=*&order=created_at.desc'),
+      dbGet('withdrawals', 'select=*&order=created_at.desc'),
+      dbGet('deposits', 'select=*,profiles(full_name,email)&order=created_at.desc'),
+      dbGet('investments', 'select=*&order=created_at.desc')
+    ]);
+
+    allUsers = Array.isArray(users) ? users : [];
+    allWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
+    allDeposits = Array.isArray(deposits) ? deposits : [];
+    allInvestments = Array.isArray(investments) ? investments : [];
+
+    console.log(`✅ Loaded ${allDeposits.length} deposits from database`);
+
+    updateStats(); 
+    renderUsers(); 
+    renderWithdrawals(); 
+    renderDeposits(); 
+    renderDepositsPending(); 
+    renderInvestments(); 
+    renderOverviewWithdrawals(); 
+    renderOverviewDeposits(); 
+    populateCreditUserSelect();
+
+  } catch (ex) {
+    console.error("loadAll error:", ex);
+    showToast('Error loading data: ' + ex.message);
+  }
+}
 
     function isPending(status) {
         if (status == null || status === '') return true;
