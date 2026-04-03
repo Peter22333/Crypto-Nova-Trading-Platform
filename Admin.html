@@ -921,17 +921,22 @@
     function adminLogout() { ADMIN_TOKEN = null; document.getElementById('admin-login-screen').style.display = 'flex'; document.getElementById('admin-dashboard').style.display = 'none'; }
 
    async function dbGet(table, params = '') {
-  const r = await fetch(SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : ''), { 
-    headers: adminH() 
+  const url = SUPA_URL + '/rest/v1/' + table + (params ? '?' + params : '');
+  const r = await fetch(url, {
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + ADMIN_TOKEN,
+      'Content-Type': 'application/json'
+    }
   });
-  
-  const data = await r.json();
 
   if (!r.ok) {
-    console.error(`Failed to fetch ${table}:`, data);
-    throw new Error(data.message || `Failed to load ${table}`);
+    const err = await r.text();
+    console.error(`dbGet ${table} failed (${r.status}):`, err);
+    return [];
   }
-  
+
+  const data = await r.json();
   return Array.isArray(data) ? data : [];
 }
     async function dbInsert(table, body) {
@@ -945,40 +950,46 @@
         return r.json();
     }
 
-    async function loadAll() {
+   async function loadAll() {
   try {
-    console.log("🔄 Loading data as admin...");
+    console.log('🔄 Loading admin data...');
+    console.log('Admin token present:', !!ADMIN_TOKEN);
 
-    const [users, withdrawals, deposits, investments] = await Promise.all([
+    // Load each table individually so one failure doesn't block the rest
+    const results = await Promise.allSettled([
       dbGet('profiles', 'select=*&order=created_at.desc'),
-      dbGet('withdrawals', 'select=*&order=created_at.desc'),
-      dbGet('deposits', 'select=*&order=created_at.desc'),
-      dbGet('investments', 'select=*&order=created_at.desc')
+      dbGet('deposits',  'select=*&order=created_at.desc'),
+      dbGet('withdrawals','select=*&order=created_at.desc'),
+      dbGet('investments','select=*&order=created_at.desc')
     ]);
 
-    allUsers = Array.isArray(users) ? users : [];
-    allWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
-    allDeposits = Array.isArray(deposits) ? deposits : [];
-    allInvestments = Array.isArray(investments) ? investments : [];
+    allUsers       = results[0].status === 'fulfilled' ? results[0].value : [];
+    allDeposits    = results[1].status === 'fulfilled' ? results[1].value : [];
+    allWithdrawals = results[2].status === 'fulfilled' ? results[2].value : [];
+    allInvestments = results[3].status === 'fulfilled' ? results[3].value : [];
 
-    console.log(`✅ Loaded ${allDeposits.length} deposits from database`);
+    console.log(`✅ profiles: ${allUsers.length}, deposits: ${allDeposits.length}, withdrawals: ${allWithdrawals.length}`);
 
-    updateStats(); 
-    renderUsers(); 
-    renderWithdrawals(); 
-    renderDeposits(); 
-    renderDepositsPending(); 
-    renderInvestments(); 
-    renderOverviewWithdrawals(); 
-    renderOverviewDeposits(); 
+    if (allDeposits.length === 0) {
+      console.warn('⚠️  No deposits loaded — check Supabase RLS policies for the deposits table.');
+      console.warn('    The admin user needs SELECT permission on deposits for ALL rows.');
+    }
+
+    updateStats();
+    renderUsers();
+    renderWithdrawals();
+    renderDeposits();
+    renderDepositsPending();
+    renderInvestments();
+    renderOverviewWithdrawals();
+    renderOverviewDeposits();
     populateCreditUserSelect();
 
   } catch (ex) {
-    console.error("loadAll error:", ex);
+    console.error('loadAll error:', ex);
     showToast('Error loading data: ' + ex.message);
   }
 }
-
     function isPending(status) {
         if (status == null || status === '') return true;
         var s = String(status).toLowerCase().trim();
