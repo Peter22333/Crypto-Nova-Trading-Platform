@@ -272,7 +272,7 @@ const SUPA_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 // Supabase Dashboard → Project Settings → API → service_role (secret)
 // This key bypasses RLS and lets admin read ALL rows.
 // Keep it secret — only use in your admin panel.
-const SUPA_SERVICE_KEY = 'YOUR_SERVICE_ROLE_KEY_HERE';
+const SUPA_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc';
 
 var ADMIN_TOKEN = null;  // set after login
 var allUsers = [], allDeposits = [], allWithdrawals = [], allInvestments = [];
@@ -292,7 +292,7 @@ function userHeaders() {
 // For admin reads — uses service_role key to bypass RLS
 // If service key not set, falls back to user JWT (requires RLS policies)
 function adminReadHeaders() {
-  var key = (SUPA_SERVICE_KEY && SUPA_SERVICE_KEY !== 'YOUR_SERVICE_ROLE_KEY_HERE')
+  var key = (SUPA_SERVICE_KEY && SUPA_SERVICE_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc')
     ? SUPA_SERVICE_KEY : ADMIN_TOKEN;
   return {
     'apikey': SUPA_ANON_KEY,
