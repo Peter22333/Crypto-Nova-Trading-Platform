@@ -2452,9 +2452,8 @@
   }
 
   try {
-    console.log('🔄 Starting deposit insert for user:', uid, 'amount:', depositAmount);
+    console.log('🔄 Trying to insert deposit for user:', uid);
 
-    // Insert deposit
     const depositData = {
       user_id: uid,
       method: selectedMethod || 'crypto',
@@ -2464,13 +2463,13 @@
       credited: false,
       ref: depRef,
       status: 'pending',
-      admin_note: 'User submitted via deposit page'
+      admin_note: 'Submitted by user'
     };
 
-    const depositResult = await sb.insert('deposits', depositData);
-    console.log('✅ Deposit insert result:', depositResult);
+    const result = await sb.insert('deposits', depositData);
+    console.log('✅ Deposit insert successful:', result);
 
-    // Insert transaction
+    // Also insert transaction
     await sb.insert('transactions', {
       user_id: uid,
       type: 'deposit',
@@ -2482,7 +2481,7 @@
 
     console.log('✅ Transaction insert successful');
 
-    // Local state for success screen
+    // Local state
     const dep = {
       id: depRef,
       method: selectedMethod,
@@ -2498,7 +2497,7 @@
     STATE.deposits.unshift(dep);
     saveState();
 
-    // Go to success
+    // Go to success screen
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-5').classList.add('active');
     buildSuccessPanel();
@@ -2506,8 +2505,8 @@
     showToast('Deposit submitted successfully! Pending admin review.', 'success');
 
   } catch (error) {
-    console.error('❌ Deposit insert FAILED:', error);
-    showToast('Failed to save deposit to database. Error: ' + (error.message || 'Unknown error'), 'error');
+    console.error('❌ Insert failed with error:', error);
+    showToast('Failed to save deposit: ' + (error.message || 'Unknown error - check console'), 'error');
 
     // Still show success screen
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
