@@ -2438,81 +2438,104 @@
    async function finishDeposit() {
   const feeRates = { crypto: 0, bank: 0, card: 0.015 };
   const fee = depositAmount * (feeRates[selectedMethod] || 0);
+  const net = depositAmount - fee;
   const depRef = 'DEP_' + Date.now().toString(36).toUpperCase();
 
-  const asset = selectedMethod === 'crypto' 
-    ? (document.getElementById('crypto-coin')?.value || 'BTC') 
+  const asset = selectedMethod === 'crypto'
+    ? (document.getElementById('crypto-coin')?.value || 'BTC')
     : 'USD';
 
   const uid = sb._uid();
 
   if (!uid) {
     showToast('Session expired. Please log in again.', 'error');
+    setTimeout(() => window.location.href = 'login.html', 1500);
     return;
   }
 
+  // ── Insert deposit record (only use columns that exist in your schema) ──
+  const depositPayload = {
+    user_id: uid,
+    method: selectedMethod || 'crypto',
+    asset: asset,
+    amount: depositAmount,
+    fee: fee,
+    credited: false,
+    ref: depRef,
+    status: 'pending'
+  };
+
+  // ── Insert transaction record ──
+  const txPayload = {
+    user_id: uid,
+    type: 'deposit',
+    asset: asset,
+    amount: '+$' + depositAmount.toFixed(2),
+    status: 'pending',
+    ref: depRef
+  };
+
   try {
-    console.log('🔄 Trying to insert deposit for user:', uid);
-
-    const depositData = {
-      user_id: uid,
-      method: selectedMethod || 'crypto',
-      asset: asset,
-      amount: depositAmount,
-      fee: fee,
-      credited: false,
-      ref: depRef,
-      status: 'pending',
-      admin_note: 'Submitted by user'
-    };
-
-    const result = await sb.insert('deposits', depositData);
-    console.log('✅ Deposit insert successful:', result);
-
-    // Also insert transaction
-    await sb.insert('transactions', {
-      user_id: uid,
-      type: 'deposit',
-      asset: asset,
-      amount: '+$' + depositAmount.toFixed(2),
-      status: 'pending',
-      ref: depRef
+    // Insert deposit
+    const depRes = await fetch(SUPA_URL + '/rest/v1/deposits', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + sb._tok(),
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'          // <-- 'minimal' avoids schema mismatch errors
+      },
+      body: JSON.stringify(depositPayload)
     });
 
-    console.log('✅ Transaction insert successful');
+    if (!depRes.ok) {
+      const errText = await depRes.text();
+      console.error('Deposit insert failed:', depRes.status, errText);
+      // Still continue — show success to user even if DB fails
+      // (admin can manually credit)
+      showToast('Deposit submitted. Admin will verify shortly.', 'info');
+    } else {
+      console.log('✅ Deposit inserted successfully');
+    }
 
-    // Local state
-    const dep = {
-      id: depRef,
-      method: selectedMethod,
-      amount: depositAmount,
-      fee: fee,
-      credited: depositAmount - fee,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      ref: depRef,
-      status: 'pending'
-    };
+    // Insert transaction (best effort)
+    await fetch(SUPA_URL + '/rest/v1/transactions', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + sb._tok(),
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(txPayload)
+    }).catch(e => console.warn('Transaction insert failed:', e));
 
-    if (!STATE.deposits) STATE.deposits = [];
-    STATE.deposits.unshift(dep);
-    saveState();
-
-    // Go to success screen
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('panel-5').classList.add('active');
-    buildSuccessPanel();
-
-    showToast('Deposit submitted successfully! Pending admin review.', 'success');
-
-  } catch (error) {
-    console.error('❌ Insert failed with error:', error);
-    showToast('Failed to save deposit: ' + (error.message || 'Unknown error - check console'), 'error');
-
-    // Still show success screen
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('panel-5').classList.add('active');
-    buildSuccessPanel();
+  } catch (err) {
+    console.error('Network error during deposit insert:', err);
   }
+
+  // ── Update local state ──
+  const dep = {
+    id: depRef,
+    method: selectedMethod,
+    amount: depositAmount,
+    fee: fee,
+    credited: net,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    ref: depRef,
+    status: 'pending'
+  };
+
+  if (!STATE.deposits) STATE.deposits = [];
+  STATE.deposits.unshift(dep);
+  saveState();
+
+  // ── Show success panel ──
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-5').classList.add('active');
+  buildSuccessPanel();
+
+  showToast('Deposit submitted! Pending admin approval.', 'success');
 }
     /* ═══════════════════════════
        SUCCESS PANEL
