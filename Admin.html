@@ -277,8 +277,8 @@ function userHeaders() {
 // For admin reads — uses service_role key to bypass RLS
 // If service key not set, falls back to user JWT (requires RLS policies)
 function adminReadHeaders() {
-  // Use service_role key if it's properly set (long string)
-  const key = (SUPA_SERVICE_KEY && SUPA_SERVICE_KEY.length > 100) 
+  // Use service_role key to bypass RLS (this is the important part)
+  const key = SUPA_SERVICE_KEY && SUPA_SERVICE_KEY.length > 100 
     ? SUPA_SERVICE_KEY 
     : ADMIN_TOKEN;
 
