@@ -36,69 +36,86 @@
     .ham-btn{display:none;background:none;border:none;padding:6px;color:var(--text)}
     .content{padding:32px;max-width:700px;width:100%}
     .card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:28px;box-shadow:var(--sh);margin-bottom:20px}
-    .card-title{font-family:var(--font);font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px}
+    .card-title{font-family:var(--font);font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px}
+    .card-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
     .form-label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;font-family:var(--font)}
-    .form-field{margin-bottom:18px}
+    .form-field{margin-bottom:20px}
     .form-input,.form-select{width:100%;padding:12px 16px;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--body);font-size:14px;color:var(--text);outline:none;transition:border-color .2s;appearance:none}
-    .form-select{background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ba8c0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+    .form-select{background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ba8c0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
     .form-input:focus,.form-select:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-s)}
     .amount-wrap{position:relative;display:flex;align-items:center}
-    .amount-wrap .prefix{position:absolute;left:14px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--muted)}
-    .amount-input{width:100%;padding:14px 16px 14px 32px;background:#fff;border:2px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:22px;font-weight:800;color:var(--text);outline:none;transition:border-color .2s}
+    .amount-prefix{position:absolute;left:14px;font-family:var(--font);font-size:18px;font-weight:700;color:var(--muted);pointer-events:none}
+    .amount-input{width:100%;padding:14px 16px 14px 34px;background:#fff;border:2px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:22px;font-weight:800;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
     .amount-input:focus{border-color:var(--teal);box-shadow:0 0 0 4px var(--teal-s)}
-    .quick-amounts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-    .qa-btn{padding:8px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:700;color:var(--muted);transition:all .2s}
+    .quick-amounts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .qa-btn{padding:7px 15px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:700;color:var(--muted);transition:all .2s}
     .qa-btn:hover,.qa-btn.sel{background:var(--teal-l);border-color:rgba(13,184,158,.35);color:var(--teal)}
     .min-note{font-size:12px;color:var(--dim);margin-top:8px}
-    .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px}
-    .method-card{background:#fff;border:2px solid var(--border);border-radius:var(--rl);padding:20px 14px;text-align:center;cursor:pointer;transition:all .22s;position:relative}
-    .method-card:hover{border-color:var(--teal);transform:translateY(-2px)}
+    .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .method-card{background:#fff;border:2px solid var(--border);border-radius:var(--rl);padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+    .method-card:hover{border-color:var(--teal);box-shadow:0 4px 16px rgba(13,184,158,.1);transform:translateY(-1px)}
     .method-card.selected{border-color:var(--teal);background:var(--teal-l)}
-    .method-card.selected .method-check{display:flex}
-    .method-check{display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:var(--teal);color:#fff;align-items:center;justify-content:center}
-    .method-icon{font-size:24px;margin-bottom:8px}
-    .method-title{font-family:var(--font);font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
-    .method-desc{font-size:11px;color:var(--muted)}
-    .btn-submit{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:15px;background:var(--teal);color:#fff;font-family:var(--font);font-size:15px;font-weight:800;border-radius:var(--r);border:none;box-shadow:0 4px 18px rgba(13,184,158,.35);transition:all .22s;margin-top:8px}
-    .btn-submit:hover{background:var(--teal-d);transform:translateY(-2px)}
+    .method-card.selected .mcheck{display:flex}
+    .mcheck{display:none;position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:var(--teal);color:#fff;align-items:center;justify-content:center}
+    .method-icon{font-size:26px;margin-bottom:8px}
+    .method-title{font-family:var(--font);font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+    .method-desc{font-size:11px;color:var(--muted);line-height:1.4}
+    .addr-box{background:linear-gradient(135deg,#0d1a2e,#112240);border-radius:var(--r);padding:20px;color:#fff;margin-top:14px;display:none}
+    .addr-label-sm{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);margin-bottom:6px;font-family:var(--font);font-weight:700}
+    .addr-string{font-family:monospace;font-size:12px;color:#fff;word-break:break-all;line-height:1.6;background:rgba(255,255,255,.07);border-radius:8px;padding:10px 12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.1)}
+    .copy-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(13,184,158,.2);color:#0db89e;border:1px solid rgba(13,184,158,.3);border-radius:8px;padding:7px 14px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+    .copy-btn:hover{background:rgba(13,184,158,.35)}
+    .warn-box{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;line-height:1.6;display:flex;gap:8px;margin-top:12px}
+    .info-box{background:var(--teal-l);border:1px solid rgba(13,184,158,.2);border-radius:var(--r);padding:14px 16px;font-size:13px;color:#0a7a6a;line-height:1.65;display:flex;gap:10px;margin-bottom:20px}
+    .btn-submit{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:15px;background:var(--teal);color:#fff;font-family:var(--font);font-size:15px;font-weight:800;border-radius:var(--r);border:none;box-shadow:0 4px 18px rgba(13,184,158,.35);transition:all .22s}
+    .btn-submit:hover:not(:disabled){background:var(--teal-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,184,158,.4)}
     .btn-submit:disabled{background:var(--border);color:var(--dim);box-shadow:none;transform:none;cursor:not-allowed}
-    .info-box{background:var(--teal-l);border:1px solid rgba(13,184,158,.2);border-radius:var(--r);padding:14px 16px;font-size:13px;color:var(--teal-d);line-height:1.65;display:flex;gap:10px;margin-bottom:20px}
-    .warn-box{background:var(--orange-l);border:1px solid rgba(245,158,11,.25);border-radius:var(--r);padding:12px 14px;font-size:12px;color:#92400e;line-height:1.6;display:flex;gap:8px;margin-top:12px}
-    .success-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:36px;box-shadow:var(--sh);text-align:center;display:none}
+    .error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none;line-height:1.5}
+    /* SUCCESS */
+    .success-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:40px;box-shadow:var(--sh);text-align:center;display:none;margin-bottom:20px}
     .success-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-d));display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 8px 28px rgba(13,184,158,.3);animation:popIn .5s cubic-bezier(.17,.67,.3,1.3)}
     @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
     .success-title{font-family:var(--font);font-size:24px;font-weight:900;color:var(--text);margin-bottom:8px}
-    .success-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:400px;margin:0 auto 24px}
+    .success-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:420px;margin:0 auto 20px}
+    .pending-badge{display:inline-block;background:var(--orange-l);color:#b45309;font-family:var(--font);font-size:12px;font-weight:700;padding:5px 16px;border-radius:50px;margin-bottom:22px;border:1px solid rgba(245,158,11,.2)}
     .summary-box{background:var(--bg);border-radius:var(--r);padding:18px;margin-bottom:24px;text-align:left}
-    .summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid var(--border)}
+    .summary-row{display:flex;justify-content:space-between;padding:9px 0;font-size:14px;border-bottom:1px solid var(--border)}
     .summary-row:last-child{border-bottom:none}
     .summary-key{color:var(--muted)}
     .summary-val{font-weight:600;color:var(--text)}
-    .pending-badge{display:inline-block;background:var(--orange-l);color:#b45309;font-family:var(--font);font-size:12px;font-weight:700;padding:4px 14px;border-radius:50px;margin-bottom:20px}
+    .btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;padding:12px 28px;border-radius:var(--r);border:none;box-shadow:0 4px 14px rgba(13,184,158,.3);transition:all .22s;cursor:pointer}
+    .btn-primary:hover{background:var(--teal-d)}
     .btn-secondary{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--text);font-family:var(--font);font-size:14px;font-weight:600;padding:12px 24px;border-radius:var(--r);border:1.5px solid var(--border);transition:all .22s;cursor:pointer}
     .btn-secondary:hover{border-color:var(--teal);color:var(--teal)}
-    .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 18px;box-shadow:0 8px 32px rgba(0,0,0,.12);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px}
-    .toast.show{transform:translateY(0);opacity:1}
-    .t-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .t-success .t-icon{background:var(--green-l);color:var(--green)}
-    .t-error .t-icon{background:var(--red-l);color:var(--red)}
-    .t-info .t-icon{background:var(--teal-l);color:var(--teal)}
-    .addr-box{background:linear-gradient(135deg,#0d1a2e,#0a2040);border-radius:var(--rl);padding:20px;color:#fff;margin-top:14px;display:none}
-    .addr-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);margin-bottom:6px;font-family:var(--font);font-weight:700}
-    .addr-string{font-family:monospace;font-size:12px;color:#fff;word-break:break-all;line-height:1.6;background:rgba(255,255,255,.07);border-radius:8px;padding:10px 12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.1)}
-    .copy-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(13,184,158,.2);color:#0db89e;border:1px solid rgba(13,184,158,.3);border-radius:8px;padding:7px 14px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
-    .copy-btn:hover{background:rgba(13,184,158,.3)}
+    /* HISTORY */
     .hist-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh)}
     .hist-head{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:10px 18px;background:var(--bg);border-bottom:1px solid var(--border)}
-    .hist-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:13px 18px;border-bottom:1px solid var(--border);align-items:center;transition:background .18s}
+    .hist-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:13px 18px;border-bottom:1px solid var(--border);align-items:center;font-size:13px;transition:background .18s}
     .hist-row:last-child{border-bottom:none}
     .hist-row:hover{background:#f8fafd}
     .th{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
     .badge{display:inline-block;font-family:var(--font);font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px}
     .b-yellow{background:var(--orange-l);color:#b45309}
     .b-green{background:var(--green-l);color:var(--green)}
-    .empty-hist{padding:28px;text-align:center;color:var(--muted);font-size:14px}
-    @media(max-width:900px){.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:299;display:none}.sidebar-overlay.open{display:block}.ham-btn{display:flex;align-items:center;justify-content:center}.method-grid{grid-template-columns:1fr}.content{padding:18px}}
+    .b-red{background:var(--red-l);color:var(--red)}
+    .empty-hist{padding:32px;text-align:center;color:var(--muted);font-size:14px}
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 18px;box-shadow:0 8px 32px rgba(0,0,0,.12);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:320px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .t-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .t-success .t-icon{background:var(--green-l);color:var(--green)}
+    .t-error .t-icon{background:var(--red-l);color:var(--red)}
+    .t-info .t-icon{background:var(--teal-l);color:var(--teal)}
+    @media(max-width:900px){
+      .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .3s}
+      .sidebar.open{transform:translateX(0)}
+      .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:299;display:none}
+      .sidebar-overlay.open{display:block}
+      .ham-btn{display:flex;align-items:center;justify-content:center}
+      .method-grid{grid-template-columns:1fr}
+      .content{padding:18px}
+    }
     @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   </style>
 </head>
@@ -115,13 +132,31 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Main Menu</div>
-      <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
-      <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>Live Markets</a>
-      <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/></svg>Trade</a>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+        Live Markets
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Trade
+      </a>
       <div class="nav-section-label">Finance</div>
-      <a href="deposit-page.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Deposit</a>
-      <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Withdraw</a>
-      <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Transactions</a>
+      <a href="deposit-page.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Deposit
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        Withdraw
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Transactions
+      </a>
     </nav>
     <div class="sidebar-user">
       <div class="user-av" id="user-av">U</div>
@@ -151,64 +186,70 @@
 
     <div class="content">
 
-      <!-- DEPOSIT FORM -->
+      <!-- DEPOSIT FORM CARD -->
       <div class="card" id="deposit-form-card">
         <div class="card-title">Make a Deposit</div>
+        <div class="card-sub">Choose your payment method and enter the amount. Our admin team will verify and credit your balance within 1–24 hours.</div>
 
         <div class="info-box">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          All deposits are reviewed and credited by our admin team. Your balance will be updated once payment is confirmed.
+          Deposits are reviewed manually. Your balance will be updated once our team confirms your payment.
         </div>
 
+        <!-- STEP 1: METHOD -->
         <div class="form-field">
-          <label class="form-label">1. Choose Payment Method</label>
+          <label class="form-label">Step 1 — Choose Payment Method</label>
           <div class="method-grid">
-            <div class="method-card" onclick="selectMethod('crypto',this)">
-              <div class="method-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="method-card" id="mc-crypto" onclick="selectMethod('crypto',this)">
+              <div class="mcheck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
               <div class="method-icon">₿</div>
               <div class="method-title">Crypto</div>
-              <div class="method-desc">BTC, ETH, USDT, SOL</div>
+              <div class="method-desc">BTC · ETH · USDT · SOL<br><span style="color:var(--green);font-weight:700">No fees</span></div>
             </div>
-            <div class="method-card" onclick="selectMethod('bank',this)">
-              <div class="method-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="method-card" id="mc-bank" onclick="selectMethod('bank',this)">
+              <div class="mcheck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
               <div class="method-icon">🏦</div>
               <div class="method-title">Bank Transfer</div>
-              <div class="method-desc">Wire / Local bank</div>
+              <div class="method-desc">Wire / Local bank<br><span style="color:var(--green);font-weight:700">No fees</span></div>
             </div>
-            <div class="method-card" onclick="selectMethod('card',this)">
-              <div class="method-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="method-card" id="mc-card" onclick="selectMethod('card',this)">
+              <div class="mcheck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
               <div class="method-icon">💳</div>
               <div class="method-title">Card</div>
-              <div class="method-desc">Visa / Mastercard</div>
+              <div class="method-desc">Visa / Mastercard<br><span style="color:var(--orange);font-weight:700">1.5% fee</span></div>
             </div>
           </div>
         </div>
 
-        <div class="form-field" id="coin-field" style="display:none">
-          <label class="form-label">2. Select Coin</label>
-          <select class="form-select" id="coin-select" onchange="updateCryptoAddr()">
-            <option value="BTC">Bitcoin (BTC)</option>
-            <option value="ETH">Ethereum (ETH)</option>
-            <option value="USDT">Tether USDT — ERC-20</option>
-            <option value="SOL">Solana (SOL)</option>
-            <option value="BNB">BNB — BEP-20</option>
-          </select>
-          <div class="addr-box" id="addr-box">
-            <div class="addr-label">Send to this address</div>
-            <div class="addr-string" id="addr-string">bc1q705yyxfpnkrr3nzu556nnnl4egv9kkr7xma4wc</div>
-            <button class="copy-btn" onclick="copyAddr()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy Address
-            </button>
-            <div class="warn-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Only send <strong id="warn-coin">BTC</strong> to this address. Sending wrong coin = permanent loss.
+        <!-- CRYPTO COIN + ADDRESS (shown only for crypto) -->
+        <div id="crypto-section" style="display:none">
+          <div class="form-field">
+            <label class="form-label">Step 2 — Select Coin</label>
+            <select class="form-select" id="coin-select" onchange="updateCryptoAddr()">
+              <option value="BTC">₿ Bitcoin (BTC)</option>
+              <option value="ETH">Ξ Ethereum (ETH) — ERC-20</option>
+              <option value="USDT">₮ Tether (USDT) — ERC-20</option>
+              <option value="SOL">◎ Solana (SOL)</option>
+              <option value="BNB">⬡ BNB — BEP-20</option>
+            </select>
+            <div class="addr-box" id="addr-box">
+              <div class="addr-label-sm">Send to this address — <span id="addr-network">BTC Network</span></div>
+              <div class="addr-string" id="addr-string">bc1q705yyxfpnkrr3nzu556nnnl4egv9kkr7xma4wc</div>
+              <button class="copy-btn" onclick="copyAddr()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Address
+              </button>
+              <div class="warn-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Only send <strong id="warn-coin">BTC</strong> to this address on the correct network. Sending the wrong coin may result in permanent loss.
+              </div>
             </div>
           </div>
         </div>
 
+        <!-- STEP: AMOUNT -->
         <div class="form-field">
-          <label class="form-label" id="amount-label">2. Enter Amount (USD)</label>
+          <label class="form-label" id="amount-step-label">Step 2 — Enter Amount (USD)</label>
           <div class="quick-amounts">
             <button class="qa-btn" onclick="setAmt(100,this)">$100</button>
             <button class="qa-btn" onclick="setAmt(500,this)">$500</button>
@@ -218,17 +259,22 @@
             <button class="qa-btn" onclick="setAmt(25000,this)">$25,000</button>
           </div>
           <div class="amount-wrap">
-            <span class="prefix">$</span>
-            <input class="amount-input" type="number" id="amount-in" placeholder="0.00" min="50" oninput="onAmtInput(this.value)">
+            <span class="amount-prefix">$</span>
+            <input class="amount-input" type="number" id="amount-in" placeholder="0.00" min="50" step="0.01" oninput="onAmtInput(this.value)">
           </div>
-          <div class="min-note">Minimum deposit: $50.00</div>
+          <div class="min-note">Minimum deposit: <strong>$50.00</strong> · No maximum limit</div>
         </div>
 
+        <!-- STEP: NOTE -->
         <div class="form-field">
-          <label class="form-label" id="note-label">3. Payment Note (optional)</label>
-          <input class="form-input" type="text" id="note-in" placeholder="e.g. Sent via BTC on Apr 7">
+          <label class="form-label" id="note-step-label">Step 3 — Payment Note (optional)</label>
+          <input class="form-input" type="text" id="note-in" placeholder="e.g. Sent 0.0012 BTC on Apr 7, txid: abc123...">
         </div>
 
+        <!-- ERROR BOX -->
+        <div class="error-box" id="error-box"></div>
+
+        <!-- SUBMIT -->
         <button class="btn-submit" id="submit-btn" onclick="submitDeposit()" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
           Submit Deposit Request
@@ -241,11 +287,11 @@
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="success-title">Deposit Submitted ✓</div>
-        <div class="success-sub">Your deposit request has been received and is <strong>pending admin approval</strong>. Your balance will be updated once verified.</div>
+        <div class="success-sub">Your request has been received and is <strong>pending admin approval</strong>. Your balance will update once our team verifies your payment — usually within a few hours.</div>
         <div class="pending-badge">⏳ Pending Admin Approval</div>
         <div class="summary-box" id="summary-box"></div>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-          <a href="dashboard.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;padding:13px 28px;border-radius:var(--r);text-decoration:none;box-shadow:0 4px 14px rgba(13,184,158,.3)">
+        <div class="btn-row">
+          <a href="dashboard.html" class="btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
             Go to Dashboard
           </a>
@@ -254,8 +300,8 @@
       </div>
 
       <!-- DEPOSIT HISTORY -->
-      <div style="margin-top:8px">
-        <div style="font-family:var(--font);font-size:17px;font-weight:800;margin-bottom:14px">Deposit History</div>
+      <div>
+        <div style="font-family:var(--font);font-size:16px;font-weight:800;margin-bottom:12px;color:var(--text)">Deposit History</div>
         <div class="hist-card">
           <div class="hist-head">
             <div class="th">Method</div>
@@ -263,7 +309,7 @@
             <div class="th">Date</div>
             <div class="th">Status</div>
           </div>
-          <div id="hist-body"></div>
+          <div id="hist-body"><div class="empty-hist">No deposits yet</div></div>
         </div>
       </div>
 
@@ -277,71 +323,101 @@
 </div>
 
 <script>
+  // ─────────────────────────────────────
+  // CONFIG
+  // ─────────────────────────────────────
   const SUPA_URL = 'https://xqkubletgifqdutybznz.supabase.co';
   const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjA5OTMsImV4cCI6MjA4ODQzNjk5M30.TkweXseKRQuA7FoT7erYdUJMuGtYWYSZ7b7l9WCPq-8';
 
-  const sb = {
-    _h() { return { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (sb._tok() || SUPA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }; },
-    _tok() { try { return JSON.parse(localStorage.getItem('sb_session') || 'null')?.access_token; } catch { return null; } },
-    _uid() { try { return JSON.parse(localStorage.getItem('sb_session') || 'null')?.user?.id; } catch { return null; } },
-    isLoggedIn() { return !!sb._tok(); }
-  };
+  // ─────────────────────────────────────
+  // AUTH HELPERS
+  // ─────────────────────────────────────
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch { return null; }
+  }
+  function getToken() { return getSession()?.access_token || null; }
+  function getUid()   { return getSession()?.user?.id || null; }
 
-  if (!sb.isLoggedIn()) { window.location.href = 'login.html'; }
+  // Redirect if not logged in
+  if (!getToken()) { window.location.href = 'login.html'; }
 
+  // Build auth headers — always user JWT for user operations
+  function authHeaders() {
+    return {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + getToken(),
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'  // minimal = no body returned, just status code
+    };
+  }
+
+  // ─────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────
   var STATE = {};
-  try { STATE = JSON.parse(localStorage.getItem('at_state')) || {}; } catch(e) {}
-  if (!STATE.user) STATE.user = { name: 'User', email: '', initials: 'U' };
-  if (!STATE.balance) STATE.balance = 0;
-  if (!STATE.deposits) STATE.deposits = [];
+  try { STATE = JSON.parse(localStorage.getItem('at_state') || '{}'); } catch(e) {}
+  STATE.user     = STATE.user     || { name: 'User', email: '', initials: 'U' };
+  STATE.balance  = STATE.balance  || 0;
+  STATE.deposits = STATE.deposits || [];
   function saveState() { try { localStorage.setItem('at_state', JSON.stringify(STATE)); } catch(e) {} }
 
-  document.getElementById('user-av').textContent = STATE.user.initials || 'U';
-  document.getElementById('user-name-display').textContent = STATE.user.name || 'User';
-  document.getElementById('topbar-balance').textContent = '$' + STATE.balance.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
+  // Populate UI with user info
+  document.getElementById('user-av').textContent           = STATE.user.initials || 'U';
+  document.getElementById('user-name-display').textContent = STATE.user.name     || 'User';
+  document.getElementById('topbar-balance').textContent    = '$' + parseFloat(STATE.balance).toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2});
 
+  // ─────────────────────────────────────
+  // CRYPTO ADDRESSES + NETWORKS
+  // ─────────────────────────────────────
   const ADDRS = {
-    BTC: 'bc1q705yyxfpnkrr3nzu556nnnl4egv9kkr7xma4wc',
-    ETH: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    USDT: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    SOL: '5xHoBdL8UgGj4r4bTkFxS8Y8mNjkpGKkJdQWer9bKzmn',
-    BNB: 'bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2'
+    BTC:  { addr: 'bc1q705yyxfpnkrr3nzu556nnnl4egv9kkr7xma4wc', net: 'Bitcoin Network (BTC)' },
+    ETH:  { addr: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',   net: 'Ethereum ERC-20' },
+    USDT: { addr: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',   net: 'Ethereum ERC-20' },
+    SOL:  { addr: '5xHoBdL8UgGj4r4bTkFxS8Y8mNjkpGKkJdQWer9bKzmn', net: 'Solana Network' },
+    BNB:  { addr: 'bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2', net: 'BEP-20 (BSC)' }
   };
 
+  // ─────────────────────────────────────
+  // DEPOSIT FORM STATE
+  // ─────────────────────────────────────
   var selectedMethod = '';
-  var depositAmount = 0;
+  var depositAmount  = 0;
 
   function selectMethod(m, el) {
     selectedMethod = m;
     document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    var coinField = document.getElementById('coin-field');
-    var amtLabel = document.getElementById('amount-label');
-    var noteLabel = document.getElementById('note-label');
+
+    var cryptoSection = document.getElementById('crypto-section');
+    var amtLabel      = document.getElementById('amount-step-label');
+    var noteLabel     = document.getElementById('note-step-label');
+
     if (m === 'crypto') {
-      coinField.style.display = 'block';
+      cryptoSection.style.display = 'block';
       document.getElementById('addr-box').style.display = 'block';
-      amtLabel.textContent = '3. Enter Amount (USD equivalent)';
-      noteLabel.textContent = '4. Payment Note (optional)';
+      amtLabel.textContent  = 'Step 3 — Enter Amount (USD equivalent)';
+      noteLabel.textContent = 'Step 4 — Payment Note (optional)';
       updateCryptoAddr();
     } else {
-      coinField.style.display = 'none';
-      amtLabel.textContent = '2. Enter Amount (USD)';
-      noteLabel.textContent = '3. Payment Note (optional)';
+      cryptoSection.style.display = 'none';
+      amtLabel.textContent  = 'Step 2 — Enter Amount (USD)';
+      noteLabel.textContent = 'Step 3 — Payment Note (optional)';
     }
     checkSubmit();
   }
 
   function updateCryptoAddr() {
     var coin = document.getElementById('coin-select').value;
-    document.getElementById('addr-string').textContent = ADDRS[coin] || ADDRS.BTC;
-    document.getElementById('warn-coin').textContent = coin;
+    var info = ADDRS[coin] || ADDRS.BTC;
+    document.getElementById('addr-string').textContent  = info.addr;
+    document.getElementById('addr-network').textContent = info.net;
+    document.getElementById('warn-coin').textContent    = coin;
   }
 
   function copyAddr() {
     var addr = document.getElementById('addr-string').textContent;
     navigator.clipboard.writeText(addr).catch(() => {});
-    showToast('Address copied!', 'success');
+    showToast('Address copied to clipboard!', 'success');
   }
 
   function setAmt(amt, el) {
@@ -349,148 +425,214 @@
     document.getElementById('amount-in').value = amt;
     document.querySelectorAll('.qa-btn').forEach(b => b.classList.remove('sel'));
     el.classList.add('sel');
+    hideError();
     checkSubmit();
   }
 
   function onAmtInput(val) {
     depositAmount = parseFloat(val) || 0;
     document.querySelectorAll('.qa-btn').forEach(b => b.classList.remove('sel'));
+    hideError();
     checkSubmit();
   }
 
   function checkSubmit() {
-    document.getElementById('submit-btn').disabled = !(selectedMethod !== '' && depositAmount >= 50);
+    var ok = selectedMethod !== '' && depositAmount >= 50;
+    document.getElementById('submit-btn').disabled = !ok;
   }
 
+  function showError(msg) {
+    var el = document.getElementById('error-box');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('error-box').style.display = 'none';
+  }
+
+  // ─────────────────────────────────────
+  // SUBMIT DEPOSIT
+  // ─────────────────────────────────────
   async function submitDeposit() {
+    hideError();
+
+    // Validate
+    if (!selectedMethod) { showError('Please select a payment method.'); return; }
+    if (depositAmount < 50) { showError('Minimum deposit is $50.00.'); return; }
+
+    var uid = getUid();
+    if (!uid) {
+      showError('Session expired. Please log in again.');
+      setTimeout(() => window.location.href = 'login.html', 1500);
+      return;
+    }
+
     var btn = document.getElementById('submit-btn');
     btn.disabled = true;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Submitting...';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Submitting…';
 
-    var uid = sb._uid();
-    if (!uid) { showToast('Session expired. Please log in again.', 'error'); window.location.href = 'login.html'; return; }
+    var coin  = selectedMethod === 'crypto' ? (document.getElementById('coin-select').value || 'BTC') : 'USD';
+    var note  = document.getElementById('note-in').value.trim();
+    var fee   = selectedMethod === 'card' ? +(depositAmount * 0.015).toFixed(2) : 0;
+    var ref   = 'DEP_' + Date.now().toString(36).toUpperCase();
+    var now   = new Date();
+    var dateStr = now.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
 
-    var coin = selectedMethod === 'crypto' ? (document.getElementById('coin-select').value || 'BTC') : 'USD';
-    var note = document.getElementById('note-in').value.trim();
-    var ref = 'DEP_' + Date.now().toString(36).toUpperCase();
-    var fee = selectedMethod === 'card' ? depositAmount * 0.015 : 0;
-
+    // ── Save deposit to Supabase ──
+    // This requires RLS INSERT policy: auth.uid() = user_id
+    var depInserted = false;
     try {
       var depRes = await fetch(SUPA_URL + '/rest/v1/deposits', {
         method: 'POST',
-        headers: sb._h(),
+        headers: authHeaders(),
         body: JSON.stringify({
-          user_id: uid,
-          method: selectedMethod,
-          asset: coin,
-          amount: depositAmount,
-          fee: fee,
+          user_id:  uid,
+          method:   selectedMethod,
+          asset:    coin,
+          amount:   depositAmount,
+          fee:      fee,
           credited: false,
-          ref: ref,
-          status: 'pending'
+          ref:      ref,
+          status:   'pending',
+          note:     note || null
         })
       });
-      if (!depRes.ok) { var e = await depRes.text(); console.error('Deposit failed:', depRes.status, e); }
-      else { console.log('Deposit saved to Supabase'); }
 
-      await fetch(SUPA_URL + '/rest/v1/transactions', {
-        method: 'POST',
-        headers: sb._h(),
-        body: JSON.stringify({
-          user_id: uid,
-          type: 'deposit',
-          asset: coin,
-          amount: '+$' + depositAmount.toFixed(2),
-          status: 'pending',
-          ref: ref
-        })
-      }).catch(e => console.warn('Transaction failed:', e));
-
+      if (depRes.ok || depRes.status === 201) {
+        depInserted = true;
+        console.log('✅ Deposit saved to Supabase, ref:', ref);
+      } else {
+        var errText = await depRes.text();
+        console.error('❌ Deposit insert failed:', depRes.status, errText);
+        // Show specific error to help debug
+        if (depRes.status === 401) {
+          showError('Authentication error. Please log out and log in again.');
+          resetBtn(); return;
+        }
+        if (depRes.status === 403 || errText.includes('policy')) {
+          showError('Permission error: RLS policy is blocking this insert. Run the SQL fix in Supabase (see console).');
+          console.error('RLS FIX NEEDED — run this SQL in Supabase SQL editor:\nALTER TABLE deposits ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users can insert own deposits" ON deposits FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);\nCREATE POLICY "Users can view own deposits" ON deposits FOR SELECT TO authenticated USING (auth.uid() = user_id);');
+          resetBtn(); return;
+        }
+        // Other error — still continue but warn
+        console.warn('Deposit not saved to DB, falling back to localStorage only');
+      }
     } catch(err) {
-      console.error('Network error:', err);
+      console.error('Network error saving deposit:', err.message);
+      // Don't block user — save to localStorage and continue
     }
 
-    var dep = {
-      method: selectedMethod,
-      amount: depositAmount,
-      fee: fee,
-      asset: coin,
-      ref: ref,
-      date: new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}),
-      status: 'pending'
-    };
+    // ── Save transaction record (best effort) ──
+    if (depInserted) {
+      fetch(SUPA_URL + '/rest/v1/transactions', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          user_id: uid,
+          type:    'deposit',
+          asset:   coin,
+          amount:  '+$' + depositAmount.toFixed(2),
+          status:  'pending',
+          ref:     ref
+        })
+      }).catch(e => console.warn('Transaction record failed (non-fatal):', e.message));
+    }
+
+    // ── Save to local state ──
+    var dep = { method: selectedMethod, amount: depositAmount, fee, asset: coin, ref, date: dateStr, status: 'pending', note };
     STATE.deposits.unshift(dep);
     saveState();
 
+    // ── Show success ──
     document.getElementById('deposit-form-card').style.display = 'none';
-    document.getElementById('success-card').style.display = 'block';
+    document.getElementById('success-card').style.display     = 'block';
 
     var methodLabels = { crypto: 'Cryptocurrency (' + coin + ')', bank: 'Bank Transfer', card: 'Debit / Credit Card' };
-    document.getElementById('summary-box').innerHTML =
-      '<div class="summary-row"><span class="summary-key">Method</span><span class="summary-val">' + (methodLabels[selectedMethod] || selectedMethod) + '</span></div>' +
-      '<div class="summary-row"><span class="summary-key">Amount</span><span class="summary-val">$' + depositAmount.toFixed(2) + '</span></div>' +
-      '<div class="summary-row"><span class="summary-key">Fee</span><span class="summary-val">' + (fee > 0 ? '$' + fee.toFixed(2) : 'Free') + '</span></div>' +
-      '<div class="summary-row"><span class="summary-key">Reference</span><span class="summary-val" style="font-size:12px">' + ref + '</span></div>' +
-      '<div class="summary-row"><span class="summary-key">Status</span><span class="summary-val" style="color:#f59e0b">PENDING APPROVAL</span></div>';
+    document.getElementById('summary-box').innerHTML = [
+      ['Method',    methodLabels[selectedMethod]],
+      ['Amount',    '$' + depositAmount.toFixed(2)],
+      ['Fee',       fee > 0 ? '$' + fee.toFixed(2) : 'Free'],
+      ['Reference', ref],
+      ['Status',    '<span style="color:var(--orange);font-weight:700">PENDING ADMIN APPROVAL</span>'],
+      depInserted ? ['Saved to', '✅ Database (admin can see it)'] : ['Saved to', '⚠️ Local only — check DB connection']
+    ].map(([k,v]) =>
+      '<div class="summary-row"><span class="summary-key">' + k + '</span><span class="summary-val">' + v + '</span></div>'
+    ).join('');
 
     buildHistory();
     showToast('Deposit submitted! Pending admin approval.', 'success');
   }
 
-  function resetForm() {
-    selectedMethod = '';
-    depositAmount = 0;
-    document.getElementById('amount-in').value = '';
-    document.getElementById('note-in').value = '';
-    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('.qa-btn').forEach(b => b.classList.remove('sel'));
-    document.getElementById('coin-field').style.display = 'none';
-    document.getElementById('addr-box').style.display = 'none';
-    document.getElementById('submit-btn').disabled = true;
-    document.getElementById('submit-btn').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7 7 7-7"/></svg> Submit Deposit Request';
-    document.getElementById('deposit-form-card').style.display = 'block';
-    document.getElementById('success-card').style.display = 'none';
+  function resetBtn() {
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7 7 7-7"/></svg> Submit Deposit Request';
   }
 
+  function resetForm() {
+    selectedMethod = ''; depositAmount = 0;
+    document.getElementById('amount-in').value = '';
+    document.getElementById('note-in').value   = '';
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.qa-btn').forEach(b => b.classList.remove('sel'));
+    document.getElementById('crypto-section').style.display = 'none';
+    document.getElementById('addr-box').style.display       = 'none';
+    document.getElementById('amount-step-label').textContent = 'Step 2 — Enter Amount (USD)';
+    document.getElementById('note-step-label').textContent   = 'Step 3 — Payment Note (optional)';
+    hideError();
+    resetBtn();
+    document.getElementById('deposit-form-card').style.display = 'block';
+    document.getElementById('success-card').style.display      = 'none';
+  }
+
+  // ─────────────────────────────────────
+  // HISTORY
+  // ─────────────────────────────────────
   function buildHistory() {
-    var el = document.getElementById('hist-body');
+    var el   = document.getElementById('hist-body');
     var deps = STATE.deposits || [];
     if (!deps.length) { el.innerHTML = '<div class="empty-hist">No deposits yet</div>'; return; }
     var labels = { crypto: 'Crypto', bank: 'Bank Wire', card: 'Card' };
-    el.innerHTML = deps.map(d =>
-      '<div class="hist-row">' +
-      '<div style="font-size:13px;font-weight:600">' + (labels[d.method] || d.method) + '</div>' +
-      '<div style="font-family:var(--font);font-size:13px;font-weight:700;color:var(--green)">+$' + parseFloat(d.amount).toFixed(2) + '</div>' +
-      '<div style="font-size:13px;color:var(--muted)">' + d.date + '</div>' +
-      '<div><span class="badge ' + (d.status === 'confirmed' ? 'b-green' : 'b-yellow') + '">' + d.status + '</span></div>' +
-      '</div>'
-    ).join('');
+    el.innerHTML = deps.map(d => {
+      var badgeClass = d.status === 'confirmed' ? 'b-green' : d.status === 'rejected' ? 'b-red' : 'b-yellow';
+      return '<div class="hist-row">' +
+        '<div style="font-weight:600">' + (labels[d.method] || d.method) + '</div>' +
+        '<div style="font-family:var(--font);font-weight:700;color:var(--green)">+$' + parseFloat(d.amount).toFixed(2) + '</div>' +
+        '<div style="color:var(--muted)">' + d.date + '</div>' +
+        '<div><span class="badge ' + badgeClass + '">' + (d.status || 'pending') + '</span></div>' +
+        '</div>';
+    }).join('');
   }
-
   buildHistory();
 
-  var toastT = null;
+  // ─────────────────────────────────────
+  // TOAST
+  // ─────────────────────────────────────
+  var toastTimer = null;
   function showToast(msg, type) {
     var t = document.getElementById('toast');
     t.className = 'toast t-' + (type || 'info');
     document.getElementById('t-msg').textContent = msg;
     var icons = {
       success: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>',
-      error: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-      info: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      error:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      info:    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
     };
     document.getElementById('t-icon').innerHTML = icons[type] || icons.info;
     t.classList.add('show');
-    if (toastT) clearTimeout(toastT);
-    toastT = setTimeout(() => t.classList.remove('show'), 3200);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
   }
 
-  function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('open'); }
+  // ─────────────────────────────────────
+  // SIDEBAR / LOGOUT
+  // ─────────────────────────────────────
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('open'); }
   function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('open'); }
 
   async function logout() {
     try {
-      var tok = sb._tok();
+      var tok = getToken();
       if (tok) await fetch(SUPA_URL + '/auth/v1/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + tok, 'apikey': SUPA_KEY } });
     } catch(e) {}
     localStorage.removeItem('sb_session');
