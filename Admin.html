@@ -561,10 +561,10 @@ function renderWithdrawalsOverview() {
 }
 /* ─── DEPOSITS ────────────────────────────────────────────────────── */
 function renderDepositsPending() {
-  var el = document.getElementById('view-deposits'); // Or your specific pending container ID
+  var el = document.getElementById('view-deposits'); 
   if (!el) return;
 
-  // Filter the main data for 'pending' status
+  // IMPORTANT: This filters based on the 'status' column in your Supabase table
   var pending = allData.deposits.filter(function(i) { 
     return (i.status || '').toLowerCase() === 'pending'; 
   });
@@ -574,13 +574,13 @@ function renderDepositsPending() {
     return;
   }
 
-  var h = '<table class="table"><thead><tr><th>User ID</th><th>Amount</th><th>Method</th><th>Action</th></tr></thead><tbody>';
+  var h = '<table class="table"><thead><tr><th>Ref</th><th>Amount</th><th>Asset/Method</th><th>Action</th></tr></thead><tbody>';
   pending.forEach(function(i) {
     h += '<tr>'
-      + '<td><code style="font-size:11px">' + i.user_id.substring(0,8) + '...</code></td>'
+      + '<td><code style="font-size:11px">' + (i.ref || '—') + '</code></td>'
       + '<td><b>$' + (i.amount || 0) + '</b></td>'
-      + '<td>' + (i.method || '—') + '</td>'
-      + '<td><button class="btn" style="background:var(--green);color:white;padding:6px 12px;cursor:pointer;border:none;border-radius:4px;font-weight:600;" onclick="approveDeposit(\'' + i.id + '\')">Approve</button></td>'
+      + '<td>' + (i.asset || i.method || '—') + '</td>'
+      + '<td><button class="btn" style="background:var(--green);color:white;padding:6px 12px;cursor:pointer;border:none;border-radius:4px;font-weight:600;" onclick="approveDeposit(\'' + i.id + '\', \'' + i.user_id + '\', ' + i.amount + ')">Approve</button></td>'
       + '</tr>';
   });
   h += '</tbody></table>';
@@ -826,8 +826,8 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && document.getElementById('admin-login-screen').style.display !== 'none') doAdminLogin();
 });
   /* ─── NEW APPROVE FUNCTION ─── */
-async function approveDeposit(depositId) {
-  if (!confirm("Approve this deposit?")) return;
+async function approveDeposit(depositId, userId, amount) {
+  if (!confirm("Confirm this deposit and credit the user?")) return;
 
   try {
     const response = await fetch(SUPA_URL + '/rest/v1/deposits?id=eq.' + depositId, {
@@ -838,15 +838,17 @@ async function approveDeposit(depositId) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ status: 'completed' })
+      body: JSON.stringify({ 
+        status: 'completed',
+        credited: true // Matches your deposit code's field
+      })
     });
 
     if (response.ok) {
-      showToast("Deposit Approved!");
-      // This re-fetches the data from Supabase so the list updates automatically
-      fetchDeposits(); 
+      showToast("Deposit Approved and Credited!");
+      fetchDeposits(); // Refresh list
     } else {
-      showToast("Error: Could not update database.");
+      showToast("Error updating database.");
     }
   } catch (error) {
     showToast("Network error.");
