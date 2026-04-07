@@ -254,8 +254,8 @@
 /* ─── CONFIG ──────────────────────────────────────────────────────── */
 // Using the SAME anon key as the user-facing site — this is correct.
 // Admin reads all rows via RLS policies that check is_admin flag or email.
-const SUPA_URL = 'https://xqkubletgifqdutybznz.supabase.co';
-const SUPA_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjA5OTMsImV4cCI6MjA4ODQzNjk5M30.TkweXseKRQuA7FoT7erYdUJMuGtYWYSZ7b7l9WCPq-8';
+const SUPA_URL = 'https://xqubletgifqdutybzfuz.supabase.co'; 
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3VibGV0Z2lmcWR1dHliem56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjg2MDk5MywiZXhwIjoyMDg4NDM2OTkzfQ.LfTaqfZhpMfSl0dhIK1rn7NBGwMn7DsuISVQOPpe7Kc';
 // ⚠️ REPLACE THIS with your actual service_role key from:
 // Supabase Dashboard → Project Settings → API → service_role (secret)
 // This key bypasses RLS and lets admin read ALL rows.
@@ -561,28 +561,27 @@ function renderWithdrawalsOverview() {
 }
 /* ─── DEPOSITS ────────────────────────────────────────────────────── */
 function renderDepositsPending() {
-  var pending = allDeposits.filter(function(d) { return isPending(d.status); });
-  var badge = document.getElementById('dep-pending-badge');
-  if (badge) badge.textContent = pending.length + ' pending';
-  var el = document.getElementById('deposits-pending-table');
+  var el = document.getElementById('view-deposits'); // Or your specific pending container ID
   if (!el) return;
-  if (!pending.length) {
-    el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--muted)">✅ No pending deposits</div>';
+
+  // Filter the main data for 'pending' status
+  var pending = allData.deposits.filter(function(i) { 
+    return (i.status || '').toLowerCase() === 'pending'; 
+  });
+
+  if (pending.length === 0) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No pending deposits found.</div>';
     return;
   }
-  var h = '<table><thead><tr><th>User</th><th>Asset</th><th>Method</th><th>Ref</th><th>Submitted</th><th>Credit Amount</th><th>Actions</th></tr></thead><tbody>';
-  pending.forEach(function(d) {
+
+  var h = '<table class="table"><thead><tr><th>User ID</th><th>Amount</th><th>Method</th><th>Action</th></tr></thead><tbody>';
+  pending.forEach(function(i) {
     h += '<tr>'
-      + '<td><div style="font-weight:700">' + getUserName(d.user_id) + '</div><div style="font-size:11px;color:var(--muted)">' + getUserEmail(d.user_id) + '</div></td>'
-      + '<td><span class="badge badge-active">' + (d.asset || '—') + '</span></td>'
-      + '<td style="font-size:12px;color:var(--muted)">' + (d.method || 'crypto') + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--muted)">' + (d.ref || d.id || '—').slice(0,18) + '…</td>'
-      + '<td style="font-size:12px;color:var(--muted)">' + fmtDate(d.created_at) + '</td>'
-      + '<td><input type="number" id="da-' + d.id + '" placeholder="Amount" min="0" step="0.01" style="width:110px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;outline:none"></td>'
-      + '<td style="white-space:nowrap">'
-      + '<button class="btn btn-green" style="margin-right:4px" onclick="confirmPendingDeposit(\'' + d.id + '\',\'' + d.user_id + '\',\'' + (d.asset||'Crypto') + '\')">✓ Confirm</button>'
-      + '<button class="btn btn-red" onclick="rejectDeposit(\'' + d.id + '\')">✗ Reject</button>'
-      + '</td></tr>';
+      + '<td><code style="font-size:11px">' + i.user_id.substring(0,8) + '...</code></td>'
+      + '<td><b>$' + (i.amount || 0) + '</b></td>'
+      + '<td>' + (i.method || '—') + '</td>'
+      + '<td><button class="btn" style="background:var(--green);color:white;padding:6px 12px;cursor:pointer;border:none;border-radius:4px;font-weight:600;" onclick="approveDeposit(\'' + i.id + '\')">Approve</button></td>'
+      + '</tr>';
   });
   h += '</tbody></table>';
   el.innerHTML = h;
@@ -826,6 +825,33 @@ function showToast(msg) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && document.getElementById('admin-login-screen').style.display !== 'none') doAdminLogin();
 });
+  /* ─── NEW APPROVE FUNCTION ─── */
+async function approveDeposit(depositId) {
+  if (!confirm("Approve this deposit?")) return;
+
+  try {
+    const response = await fetch(SUPA_URL + '/rest/v1/deposits?id=eq.' + depositId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ status: 'completed' })
+    });
+
+    if (response.ok) {
+      showToast("Deposit Approved!");
+      // This re-fetches the data from Supabase so the list updates automatically
+      fetchDeposits(); 
+    } else {
+      showToast("Error: Could not update database.");
+    }
+  } catch (error) {
+    showToast("Network error.");
+  }
+}
 </script>
 </body>
 </html>
